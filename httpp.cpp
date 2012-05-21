@@ -26,13 +26,6 @@ namespace httpp
 	//But at least we can minimize the size of the vector by keeping statically-named pages in the map.
 	std::vector<PageMap*> RegexMap;
 
-#ifdef THREADED
-	void bind(std::string key, PageFunc page)
-	{
-		PageMap *m = new PageMap("/"+key, page);
-		BindMap.push(m);
-	}
-#else
 	void bind(std::string key, BasePage &page, std::string ContentType)
 	{
 		PageMap *m = new PageMap("/"+key, page, ContentType);
@@ -44,7 +37,6 @@ namespace httpp
 		PageMap *m = new PageMap("/"+key, page, ContentType);
 		RegexMap.push_back(m);
 	}
-#endif
 
 	std::string ServerIdentStr = "htt++ Version 0.1 alpha. http://www.example.com/httpp/";
 
