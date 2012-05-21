@@ -334,6 +334,8 @@ namespace httpp
 		{
 			m_headers.push_back(new Header("Set-Cookie", JFormat::format("{0}={1}", name, content)));
 		}
+
+		Request *getRequest(){ return request; }
 		std::function<void(void)> m_lambdaFunc;
 		bool m_sectionTracker;
 		BaseSection *m_section;

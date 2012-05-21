@@ -25,16 +25,21 @@
 						for(m_sectionTracker=true;m_sectionTracker;m_sectionTracker=execsection(m_section, m_lambdaFunc)) \
 							m_lambdaFunc = [&]()
 
+#define SECT(obj, ...)	m_section = new obj(__VA_ARGS__); \
+						m_section->setPage(this); \
+						execsection(m_section, [&](){})
+
 /*
  * Syntactic sugar to improve the seamlessness and feel of the code and make it more appropriate for a page-oriented structure.
  * As with our handling of pages, this lets developers make use of the library without having to have much knowledge of its
  * internal methods of operation.
+ *
+ * The primary reason for these is simple coherence with the rest of the library.
  */
 #define Section(name) class name : public httpp::BaseSection
 #define SectionVars private
 #define SectionInfo public
-#define args(sect, ...) sect : __VA_ARGS__ {}
-#define layout void do_layout(std::function<void(void)> content)
+#define SectionLayout() void do_layout(std::function<void(void)> content)
 
 namespace httpp
 {
@@ -43,7 +48,7 @@ namespace httpp
 	public:
 		virtual ~BaseSection(){}
 		virtual void do_layout(std::function<void(void)> name) = 0;
-		void setPage(BasePage *page){ m_page = page; }
+		void setPage(BasePage *page){ m_page = page; request = m_page->getRequest(); }
 		void setTag(Tags::BaseTag *Tag){ m_page->setTag(Tag); }
 	protected:
 		void setStatus(httpStatus r){ m_page->setStatus(r); }
@@ -83,6 +88,7 @@ namespace httpp
 		void $NNf(Params... params){ m_page->$NNf(params...); }
 
 		BasePage *m_page;
+		Request *request;
 	};
 }
 
