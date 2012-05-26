@@ -1,10 +1,35 @@
-# htt++ alpha 0.1 release readme
-# Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.
+Page(Readme)
+{
+	HTML
+	{
+		HEAD
+		{
+			$title("htt++ alpha 0.1 release readme");
+		}
+		body(style="background-color:white")
+		{
+			div(id="header")
+			{
+				$strong("htt++ alpha 0.1");
+				$("Dynamic Web Development in C++");
+			}
+			div(id="NOTE")
+			{
+				$("Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.");
+			}
+		}
+	}
+}
+
+htt++ alpha 0.1
+Dynamic Web Development in C++
+
+Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.
 
 INTRODUCTION:
 
 htt++ (pronounced "httplusplus") is a library designed to enable seamless, comfortable development of web applications using C++. The library allows the developer to write fluid, clean code that combines C++ and HTML with a consistent, C++-like syntax, while still maintaining the stylistic heirarchical approach of HTML. This makes it a great approach for people who prefer to design their pages using HTML (as opposed to traditional GUI programming methods, as with WT), but still want to harness the power and speed of C++ to build their dynamic content.
-
+1
 To maximize performance and efficiency, htt++ also includes an embedded http server. Currently, this is the only method of using htt++ - there is no apache interface - but apache can still easily be used as a proxy if desired.
 
 Contents:
