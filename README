@@ -1,23 +1,23 @@
 Page(Readme)
 {
-	HTML
-	{
-		HEAD
-		{
-			$title("htt++ alpha 0.1 release readme");
-		}
-		body(style="background-color:white")
-		{
-			div(id="header")
-			{
-				$strong("htt++ alpha 0.1");
-				$("Dynamic Web Development in C++");
-			}
-			div(id="NOTE")
-			{
-				$("Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.");
-			}
-		}
+  HTML
+  {
+    HEAD
+    {
+      $title("htt++ alpha 0.1 release readme");
+    }
+    body(style="background-color:white")
+    {
+      div(id="header")
+      {
+        $strong("htt++ alpha 0.1");
+        $("Dynamic Web Development in C++");
+      }
+      div(id="NOTE")
+      {
+        $("Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.");
+      }
+    }
   }
 }
 
