@@ -64,7 +64,6 @@ namespace httpp
 		{
 			request=r;
 			m_outstream.str("");
-			setStatus(httpStatus::rOK);
 			generateHeaders();
 			do_layout(*request);
 			return m_outstream.str();

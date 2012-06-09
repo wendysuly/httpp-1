@@ -141,8 +141,6 @@
  */
 #define HTTP_X_TAG(tagname, ...) [&](){HTTPP_BUILD_TAG(tagname, __VA_ARGS__); make_x_tag(#tagname);}()
 
-#define REDEFINE_TAGS() #include <tags.hpp>
-
 #endif
 
 //Outside preprocessor ifchecks for easy folding.

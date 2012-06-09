@@ -42,10 +42,11 @@ Contents:
   3.3 Text
   3.4 Pages
   3.5 Sections
-  3.6 Accessing request data
-  3.7 Adjusting response data
-  3.8 Pages inside pages
-  3.9 Loading static content from disk
+  3.6 GET and POST variables
+  3.7 Accessing request data
+  3.8 Adjusting response data
+  3.9 Pages inside pages
+  3.10 Loading static content from disk
 4. Troubleshooting and known issues
 5. OMG MACROS?!?!?
 6. Questions and answers
@@ -57,7 +58,7 @@ Contents:
 As this project is very much still in its early stages, there are a lot of things that need to be done to make it more accessible to the general public. Among those currently on the to-do list:
 
 -The build and deploy system needs to be refined. In a later release, htt++ will use automake for deployment. Once the project reaches its beta stages I will begin creating repositories for common repository managers (apt, yum, etc) to ease the deployment process.
--Many http standard features are currently missing. The project works, but it works in a somewhat limited scope at this moment. However, with the possible exceptions of some advanced cookie functionality and basic http authentication, it should cover the scope of most web projects. The one glaring exception right now is handling of variables passed as GET and POST data.
+-Many http standard features are currently missing. The project works, but it works in a somewhat limited scope at this moment. However, with the possible exceptions of some advanced cookie functionality and basic http authentication, it should cover the scope of most web projects.
 -I will be adding shared global variables that can be accessed across processes
 -Virtual hosts, proxies, and other features for the embedded http server
 -An apache/cgi interface for htt++
@@ -442,7 +443,25 @@ public:
 When defined as traditional classes, sections are still called using the sect() macro.
 
 ==================================================
-3.6 Accessing request data
+3.6 GET and POST variables
+==================================================
+
+Accessing GET and POST variables is fairly straight-forward, and both are accessed in the same way. To access a variable named, e.g., FormField1 from within a page or section, simply call:
+
+request.getVar("FormField1");
+
+By default, this returns a std::string object; however, it can return any type that's writable using std::istream::operator>> as follows:
+
+request.getVar<type>("FormField1");
+
+So if your variable is an integer, you can call:
+
+request.getVar<int>("FormField1");
+
+And this will return an integer type.
+
+==================================================
+3.7 Accessing request data
 ==================================================
 
 Request data is available through the "request" pointer in any page or in any section. Request data currently has the following methods:
@@ -456,7 +475,7 @@ std::string getVersion(){ return m_http_version; } //Returns the HTTP version of
 std::vector<std::string> getCookies(){ return m_cookies; } //Returns a vector of cookies sent by the client
 
 ==================================================
-3.7 Adjusting response data
+3.8 Adjusting response data
 ==================================================
 
 Pages can use the following methods to change the response data sent back to the client:
@@ -475,10 +494,8 @@ enum class httpStatus { rOK = 200, rBAD_REQUEST = 400, rNOT_FOUND = 404 };
 
 Other HTTP response codes are currently not defined. These will be added in a future release.
 
-
-
 ==================================================
-3.8 Pages inside pages
+3.9 Pages inside pages
 ==================================================
 
 If you want to include one page inside another page, rather than defining a section - say, for example, you have a standalone page but want to also include it as part of a larger page - you can accomplish this with a single simple method call:
@@ -488,7 +505,7 @@ import(pagename);
 The imported page will have access to the same request data that the calling page has access to.
 
 ==================================================
-3.9 Loading static content from disk
+3.10 Loading static content from disk
 ==================================================
 
 Sometimes, you need to load static content from the hard drive - often, this is the case with images, user-uploaded content, etc. In htt++, doing this is extremely easy; simply call httpp::bind() or httpp::regex_bind(), just as you would with a Page, but for the second argument, simply pass httpp::Static.
@@ -503,7 +520,7 @@ httpp::regex_bind(".*\\.jpg", httpp::Static);
 The biggest known issue with htt++ arises from its unfortunately unavoidable use of macros for tags. (See "OMG MACROS?!?!?" below.) There are conflicts that can arise from this; in order to resolve these conflicts, you have two options:
 
 1) Ensure that httpp.hpp is the last file on your file include list. Other includes can conflict - particularly the boost libraries.
-2) Undefine the tag that is causing a conflict - i.e., #undef b to undefine the <b> tag. If you need the tag again later, you can call REDEFINE_TAGS().
+2) Undefine the tag that is causing a conflict - i.e., #undef b to undefine the <b> tag. If you need the tag again later, you will need to #include <tags.hpp>
 
 Most other known issues are simple missing features that need to be included; rest assured, as development continues, these features will be added.
 

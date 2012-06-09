@@ -64,11 +64,11 @@ namespace httpp
 		{
 			HEAD
 			{
-				$title("Error 400: Bad request");
+				$title(JFormat::format("Error 400: {0}", getMessage()));
 			}
 			BODY
 			{
-				$strong("Error 400: Bad request");
+				$strong(JFormat::format("Error 400: {0}", getMessage()));
 				xBR;
 				xBR;
 				$i(ServerIdentStr);
@@ -165,6 +165,8 @@ namespace httpp
 						{
 							request.addHeader(str);
 						}
+						if((str = c->GetLine()) != "")
+							request.addVars(str);
 					}
 					catch(HTTPException &e)
 					{
@@ -184,6 +186,7 @@ namespace httpp
 						page = BindMap["/404"];
 						page->getPage().setStatus(httpStatus::rNOT_FOUND);
 					}
+					//operator()
 					body = (*page)(&request);
 					if(page->getContentType() != "" && page->getPage().getStatus() == httpStatus::rOK)
 						page->getPage().setHeader("Content-Type", page->getContentType());

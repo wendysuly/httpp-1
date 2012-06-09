@@ -88,7 +88,7 @@ namespace httpp
 			if(p == "")
 				s << format_args(i+1, max, params...);
 			else
-				s << (char)(i+48) << "\v" << p.str() << "\a" << format_args(i+1, max-1, params...);
+				s << i << "\v" << p.str() << "\a" << format_args(i+1, max-1, params...);
 			return s.str().c_str();
 		}
 		const char *format_args(int i, int max, TagParam &p);
