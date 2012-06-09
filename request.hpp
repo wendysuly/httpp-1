@@ -79,7 +79,14 @@ namespace httpp
 		std::string getHeader(std::string name){ return m_headers[name]; }
 		std::string operator[](std::string name){ return m_headers[name]; }
 		template<typename T=std::string>
-		T getVar(std::string name) { return m_vars[name]->get<T>(); }
+		T getVar(std::string name)
+		{
+			Variable *v = m_vars[name];
+			if(v)
+				return m_vars[name]->get<T>();
+			else
+				return T();
+		}
 		std::string getMethod(){ return m_method; }
 		std::string getLocation(){ return m_location; }
 		std::string getPath() { return m_location.erase(0, 1); }

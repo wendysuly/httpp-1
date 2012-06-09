@@ -43,10 +43,10 @@ all: libhttpp.so
 libhttpp.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -shared -o"libhttpp.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++-4.7 -shared -o"libhttpp.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
-	$(MAKE) --no-print-directory post-build
+	# $(MAKE) --no-print-directory post-build
 
 # Other Targets
 clean:
@@ -60,7 +60,7 @@ post-build:
 
 install:
 	@echo "Copying library to /usr/local/lib..."
-	cp libhttp.so /usr/local/lib
+	cp libhttpp.so /usr/local/lib
 	@echo "Copying sources to /usr/local/include..."
 	cp ../*.hpp ../*.cpp /usr/local/include
 
