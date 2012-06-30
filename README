@@ -57,7 +57,6 @@ Contents:
 
 As this project is very much still in its early stages, there are a lot of things that need to be done to make it more accessible to the general public. Among those currently on the to-do list:
 
--The build and deploy system needs to be refined. In a later release, htt++ will use automake for deployment. Once the project reaches its beta stages I will begin creating repositories for common repository managers (apt, yum, etc) to ease the deployment process.
 -Many http standard features are currently missing. The project works, but it works in a somewhat limited scope at this moment. However, with the possible exceptions of some advanced cookie functionality and basic http authentication, it should cover the scope of most web projects.
 -I will be adding shared global variables that can be accessed across processes
 -Virtual hosts, proxies, and other features for the embedded http server
@@ -74,7 +73,9 @@ htt++ has relatively few dependencies; most of the code used is self-written and
 -JFormat - http://github.com/ShadauxCat/JFormat
 -JHash - http://github.com/ShadauxCat/JHash
 
-In addition, the current implementation requires the boost-regex library, available at www.boost.org. This requirement will be removed when the g++ implement of the C++11 regex libraries is complete.
+In addition, the current implementation requires the boost-regex and boost-thread libraries, available at www.boost.org. This requirement will be removed when the g++ implement of the C++11 regex libraries is complete.
+
+To build the project, you will also need jmake and python 2.7 or greater. You can obtain jmake through pip by invoking "pip install jmake"
 
 Finally, because this project contains a large amount of C++11 code, it must be compiled using g++-4.7 or above.
 
@@ -82,16 +83,27 @@ Finally, because this project contains a large amount of C++11 code, it must be 
 2. Building and installing
 ==================================================
 
-The files here in this library are organized in an eclipse project. You can import the project to eclipse (File->Import... -> General->Existing Projects into Workspace), or you can build it manually.
+To build htt++, you simply need to invoke the included make.py script:
 
-To build it manually, in a terminal, change your directory to the Debug or Release directory (whichever you would like to build), and then run the following commands:
+./make.py
 
-make
-make install
+This will handle building and linking the project.
 
-The build system is not currently very advanced, so it has no dependency detection, unfortunately. If you have any issues building, please see the "Dependencies" section above. Alternatively, feel free to contact me through GitHub for help.
+To install:
 
+sudo ./make.py --install
+
+This will install, by default, to /usr/local/lib and /usr/local/include. If you would like to change those directories, add --overrides="InstallOutput('/path/to/library/install');InstallHeaders('/path/to/header/install')" (*with* the quotes) when running the install command. You can omit one or the other if you only want to change one.
+
+If you would like to build with debug symbols, add the word "debug" to both of those commands.
+
+The build system will automatically detect which files need to be built and which don't, even down to determining which header changes necessitate a rebuild to which files. It will also determine if a shared library has been altered since the last build and rebuild the entire project for you. However, if for any reason you need to clean the project, you can invoke:
+
+./make.py --clean
+
+==================================================
 3. Usage
+==================================================
 
 htt++ is written as a shared object library. In order to use it, you will have to include the file "httpp.hpp" - but before explaining anything else, a word of warning about this include file: In order to enable the syntax used by htt++, a good number of macros had to be defined for the tags. As a result, some tags that are common names for variables (such as "b" and "i") can cause conflict with other header files. To prevent this from happening, always make sure that httpp.hpp is the LAST file you include in your inclusions list. Also, in the event you need to use one of those variables yourself, simply #undef the macro, and then call REDEFINE_TAGS().
 
