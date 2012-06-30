@@ -23,29 +23,29 @@
  */
 #define DeclarePage(name)	namespace Pages \
 							{ \
-								class name : public httpp::BasePage{ \
+								class page_##name : public httpp::BasePage{ \
 									void do_layout(httpp::Request &request); \
 								public: \
-									name() {} \
-									~name() {} \
+									page_##name() {} \
+									~page_##name() {} \
 								}; \
 							} \
-							extern Pages::name name;
+							extern Pages::page_##name name;
 
-#define DefinePage(name)	Pages::name name; \
-								inline void Pages::name::do_layout(httpp::Request &request)
+#define DefinePage(name)	Pages::page_##name name; \
+							inline void Pages::page_##name::do_layout(httpp::Request &request)
 
 #define Page(name)	namespace Pages \
 							{ \
-								class name : public httpp::BasePage{ \
+								class page_##name : public httpp::BasePage{ \
 									void do_layout(httpp::Request &request); \
 								public: \
-									name() {} \
-									~name() {} \
+									page_##name() {} \
+									~page_##name() {} \
 								}; \
 							} \
-							Pages::name name; \
-							inline void Pages::name::do_layout(httpp::Request &request)
+							Pages::page_##name name; \
+							inline void Pages::page_##name::do_layout(httpp::Request &request)
 
 namespace httpp
 {

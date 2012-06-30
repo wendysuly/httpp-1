@@ -213,4 +213,6 @@ namespace httpp
 	}
 }
 
+#undef DECLARE_TAG
+#undef DECLARE_TAG2
 #endif /* TAGSTRUCTS_HPP_ */

@@ -13,6 +13,17 @@
 #ifndef REQUEST_HPP_
 #define REQUEST_HPP_
 
+//Bit hacky but it lets us default to std::string.
+//Macros here are primarily to help readability:
+//GET_VAR(varname, int) is a bit easier to understand than int varname = request.getVar<int>("varname"), and prevents having to type the variable name twice.
+
+#define GET_STRING_VAR(name) std::string name = request.getVar(#name);
+#define GET_OTHER_VAR(name, type) type name = request.getVar<type>(#name);
+#define GET_THIRD_ARG(arg1, arg2, arg3, ...) arg3
+#define CHOOSE_VAR_GETTER(...) GET_THIRD_ARG(__VA_ARGS__, GET_OTHER_VAR, GET_STRING_VAR)
+
+#define GET_VAR(...)  CHOOSE_VAR_GETTER(__VA_ARGS__)(__VA_ARGS__)
+
 namespace httpp
 {
 	class Header
