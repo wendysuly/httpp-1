@@ -53,7 +53,7 @@ namespace httpp
 				}
 				vars += str[i];
 			}
-			addVars(vars);
+			addRequestVars(vars);
 		}
 		while(str[i] == ' ')
 			i++;
@@ -93,7 +93,7 @@ namespace httpp
 			throw HTTPException(400, "INVALID HEADER");
 		}
 		if(strToLower(name) == "cookie")
-			m_cookies.push_back(content);
+			setCookies(content);
 		else
 		{
 			Header *h = new Header(name, content);
@@ -128,7 +128,7 @@ namespace httpp
 		}
 	}
 
-	void Request::addVars(std::string str)
+	void Request::addRequestVars(std::string str)
 	{
 		std::string name;
 		std::string content;
@@ -144,7 +144,15 @@ namespace httpp
 				in_name = !in_name;
 				if(in_name)
 				{
-					m_vars.push(new VarMap(name, content));
+					std::vector<Variable *> *v = m_request_vars[name];
+					if(v)
+					{
+						v->push_back(new Variable(content));
+					}
+					else
+					{
+						m_request_vars.push(new VarMap(name, content));
+					}
 					name = "";
 					content = "";
 				}
@@ -160,9 +168,9 @@ namespace httpp
 				s << std::hex << hexstr;
 				s >> hexchr;
 				if(in_name)
-					name += (char)hexchr;
+					name += static_cast<char>(hexchr);
 				else
-					content += (char)hexchr;
+					content += static_cast<char>(hexchr);
 				i--;
 				continue;
 			}
@@ -171,6 +179,78 @@ namespace httpp
 			else
 				content += str[i];
 		}
-		m_vars.push(new VarMap(name, content));
+
+		std::vector<Variable *> *v = m_request_vars[name];
+		if(v)
+		{
+			v->push_back(new Variable(content));
+		}
+		else
+		{
+			m_request_vars.push(new VarMap(name, content));
+		}
+	}
+
+	void Request::setCookies(std::string str)
+	{
+		std::string name;
+		std::string content;
+		int hexchr;
+		std::string hexstr;
+		std::stringstream s;
+		bool in_name = true;
+		int len=str.length();
+		for(int i=0;i<len;i++)
+		{
+			if(str[i] == '=' || str[i] == ';')
+			{
+				in_name = !in_name;
+				if(in_name)
+				{
+					m_cookies.push_back(Cookie(name, content));
+					name = "";
+					content = "";
+				}
+				if(str[i] == ';')
+				{
+					//move forward 'till we've got a non-space character.
+					while(str[++i] == ' '){}
+				}
+				continue;
+			}
+			if(str[i] == '%' && ishex(str[++i]))
+			{
+				do
+				{
+					hexstr += str[i];
+					i++;
+				}while(ishex(str[i]));
+				s << std::hex << hexstr;
+				s >> hexchr;
+				if(in_name)
+					name += static_cast<char>(hexchr);
+				else
+					content += static_cast<char>(hexchr);
+				i--;
+				continue;
+			}
+			if(in_name)
+				name += str[i];
+			else
+				content += str[i];
+		}
+		m_cookies.push_back(Cookie(name, content));
+	}
+
+	std::string Request::getCookie(std::string name)
+	{
+		for(unsigned int i = 0; i < m_cookies.size(); i++)
+		{
+			if(m_cookies[i].getName() == name)
+			{
+				return m_cookies[i].getContent();
+			}
+		}
+		return "";
 	}
 }

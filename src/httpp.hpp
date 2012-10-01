@@ -10,14 +10,15 @@
 #ifndef HTTPP_HPP_
 #define HTTPP_HPP_
 
-#include "JFormat.hpp"
-#include "JHash.hpp"
+#include "jformat/JFormat.hpp"
+#include "jhash/JHash.hpp"
 #include "page.hpp"
 #include "section.hpp"
 #include "TagStructs.hpp"
 #include "tags.hpp"
 #include "mimetypes.hpp"
 #include <fstream>
+#include "request.hpp"
 
 #define BIND(page) httpp::bind(#page, page)
 
@@ -33,6 +34,9 @@ namespace httpp
 	DeclarePage(Basic404);
 	DeclarePage(Basic400);
 	DeclarePage(Static);
+
+	BasePage &GetPageRef(const std::string &location);
+	BasePage *GetPage(const std::string &location);
 
 	void listen(int port);
 }

@@ -10,7 +10,7 @@
 #ifndef MIMETYPES_HPP_
 #define MIMETYPES_HPP_
 
-#include "JHash.hpp"
+#include "jhash/JHash.hpp"
 
 namespace httpp
 {

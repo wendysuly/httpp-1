@@ -23,8 +23,10 @@ namespace httpp
 	std::string BasePage::pad_tabs()
 	{
 		std::string s = "";
-		if(m_tagStack.empty() || m_last_line_ended == false)
+		if(m_last_line_ended == false)
 			return "";
+		for(int i=0; i<m_tabpad; i++)
+			s+="\t";
 		for(unsigned int i=0; i<m_tagStack.size(); i++)
 			s+="\t";
 		return s;
@@ -79,7 +81,7 @@ namespace httpp
 
 	httpStatus BasePage::Import(BasePage &p)
 	{
-		m_outstream << p(request);
+		m_outstream << p(m_request, m_tagStack.size(), true);
 		return p.getStatus();
 	}
 }

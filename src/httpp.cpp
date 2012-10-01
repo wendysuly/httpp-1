@@ -7,13 +7,14 @@
  * www.git-hub.com/httpp *
  *************************/
 
-#include "JNet.hpp"
-#include "request.hpp"
+#include "jnet/JNet.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
 #include <functional>
 #include <boost/regex.hpp>
+#include <thread>
+#include "request.hpp"
 #include "httpp.hpp"
 
 namespace httpp
@@ -40,6 +41,7 @@ namespace httpp
 
 	std::string ServerIdentStr = "htt++ Version 0.1 alpha. http://www.example.com/httpp/";
 
+#include "html_start.hpp"
 	DefinePage(Basic404)
 	{
 		HTML
@@ -109,6 +111,7 @@ namespace httpp
 			f.close();
 		}
 	}
+#include "html_end.hpp"
 
 	PageMap *Regex_GetPage(std::string location)
 	{
@@ -122,6 +125,35 @@ namespace httpp
 		return nullptr;
 	}
 
+	PageMap *GetPageMap(std::string location)
+	{
+		PageMap *page;
+		page = BindMap[location];
+		if(page == nullptr)
+			page = Regex_GetPage(location);
+		return page;
+	}
+
+	BasePage &GetPageRef(const std::string &location)
+	{
+		PageMap *pagemap = GetPageMap(location);
+		if(pagemap != nullptr)
+			return pagemap->getPage();
+		else
+		{
+			std::cout << "No mapping exists for " << location << std::endl;
+			pagemap = BindMap["/404"];
+			BasePage &page = pagemap->getPage();
+			page.setStatus(httpStatus::rNOT_FOUND);
+			return page;
+		}
+	}
+
+	BasePage *GetPage(const std::string &location)
+	{
+		return &GetPageRef(location);
+	}
+
 	void listen(int port)
 	{
 		if(BindMap["/400"] == nullptr)
@@ -133,20 +165,18 @@ namespace httpp
 		Sock.listen(port);
 		std::cout << "htt++ listening on port " << port << std::endl;
 		int pnum = 0;
-		if(fork())
+		int numCPU = std::thread::hardware_concurrency();
+		while(pnum < numCPU && fork())
+		{
 			pnum++;
-		if(fork())
-			pnum+=2;
-		/*if(fork())
-			pnum+=4;
-		if(fork())
-			pnum+=8;*/
+		}
 		std::cout << "New process spawned: " << pnum << std::endl;
 		std::string str;
 		std::string body;
 		std::string header;
 		std::string response;
-		PageMap *page;
+		PageMap *pagemap;
+		BasePage *page;
 		while(true)
 		{
 			Sock.HandleIO();
@@ -166,36 +196,32 @@ namespace httpp
 							request.addHeader(str);
 						}
 						if((str = c->GetLine()) != "")
-							request.addVars(str);
+							request.addRequestVars(str);
 					}
 					catch(HTTPException &e)
 					{
 						std::stringstream s;
 						s << "/" << e.getCode();
-						page = BindMap[s.str()];
-						page->getPage().setStatus((httpStatus)e.getCode());
-						page->getPage().setMessage(e.getMsg());
+						pagemap = BindMap[s.str()];
+						page = &pagemap->getPage();
+						page->setStatus((static_cast<httpStatus>(e.getCode())));
+						page->setMessage(e.getMsg());
 					}
 					if(page == nullptr)
-						page = BindMap[request.getLocation()];
-					if(page == nullptr)
-						page = Regex_GetPage(request.getLocation());
-					if(page == nullptr)
 					{
-						std::cout << "No mapping exists for " << request.getLocation() << std::endl;
-						page = BindMap["/404"];
-						page->getPage().setStatus(httpStatus::rNOT_FOUND);
+						pagemap = GetPageMap(request.getLocation());
+						page = &pagemap->getPage();
 					}
 					//operator()
 					body = (*page)(&request);
-					if(page->getContentType() != "" && page->getPage().getStatus() == httpStatus::rOK)
-						page->getPage().setHeader("Content-Type", page->getContentType());
-					header = page->getPage().getHeaders();
+					if(pagemap->getContentType() != "" && page->getStatus() == httpStatus::rOK)
+						page->setHeader("Content-Type", pagemap->getContentType());
+					header = page->getHeaders();
 					response = header + body;
 					//std::cout << std::endl << pnum << ": Sending response headers: " << page->getPage().getHeaders();
 					c->SendNow(response);
 					//Revert any status changes we've made to the page, so it returns OK next time.
-					page->getPage().setStatus(httpStatus::rOK);
+					page->setStatus(httpStatus::rOK);
 					if(request.getVersion() != "HTTP/1.1" && strToLower(request["Connection"]) != "keep-alive")
 						Sock.CloseConnection(i);
 				}

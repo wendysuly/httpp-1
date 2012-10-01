@@ -12,8 +12,8 @@
 
 #include <functional>
 #include "TagStructs.hpp"
-#include "JFormat.hpp"
-#include "JNet.hpp"
+#include "jformat/JFormat.hpp"
+#include "jnet/JNet.hpp"
 #include "request.hpp"
 #include "util.hpp"
 
@@ -47,6 +47,8 @@
 							Pages::page_##name name; \
 							inline void Pages::page_##name::do_layout(httpp::Request &request)
 
+#define noimport if(!m_is_import)
+
 namespace httpp
 {
 
@@ -60,12 +62,14 @@ namespace httpp
 	public:
 		BasePage() : m_status(httpStatus::rOK), m_last_line_ended(true), m_message("OK") { }
 		virtual ~BasePage() {}
-		std::string operator()(Request *r)
+		std::string operator()(Request *r, int tabpad = 0, bool is_import = false)
 		{
-			request=r;
+			m_request=r;
 			m_outstream.str("");
+			m_tabpad = tabpad;
+			m_is_import = is_import;
 			generateHeaders();
-			do_layout(*request);
+			do_layout(*m_request);
 			return m_outstream.str();
 		}
 		httpStatus getStatus(){return m_status;}
@@ -77,17 +81,43 @@ namespace httpp
 			ret << m_outstream.str().length();
 			setHeader("Content-Length", ret.str());
 			ret.str("");
-			ret << request->getVersion() << " " << (int)m_status << " " << m_message << std::endl;
+			ret << m_request->getVersion() << " " << static_cast<int>(m_status) << " " << m_message << std::endl;
 			int size = m_headers.size();
 			for(int i=0; i<size; i++)
 				ret << m_headers[i]->getName() << ": " << m_headers[i]->getContent() << std::endl;
 			ret << std::endl;
 			return ret.str();
 		}
-		int getIntStatus(){return (int)m_status;}
-	protected:
-		friend class BaseSection;
-		friend void listen(int port);
+		int getIntStatus(){return static_cast<int>(m_status);}
+
+
+		Header *getHeader(std::string name)
+		{
+			name = strToLower(name);
+			int size=m_headers.size();
+			for(int i=0;i<size;i++)
+			{
+				if(m_headers[i]->getName() == name)
+					return m_headers[i];
+			}
+			return nullptr;
+		}
+		void setHeader(std::string name, std::string content)
+		{
+			Header *h;
+			name = strToLower(name);
+			if((h=getHeader(name)) != nullptr)
+				h->setContent(content);
+			else
+				m_headers.push_back(new Header(name, content));
+		}
+		void addCookie(std::string name, std::string content)
+		{
+			m_headers.push_back(new Header("Set-Cookie", JFormat::format("{0}={1}", name, content)));
+		}
+
+		Request *getRequest(){ return m_request; }
+		friend BasePage &GetPageRef(const std::string &location);
 		void setStatus(httpStatus r)
 		{
 			switch(r)
@@ -101,6 +131,8 @@ namespace httpp
 		}
 		void setMessage(std::string str){ m_message = str; }
 		void setTag(Tags::BaseTag *Tag){ m_currentTag = Tag; }
+	protected:
+		friend class BaseSection;
 
 		std::string pad_tabs();
 		bool end_tag();
@@ -309,38 +341,12 @@ namespace httpp
 		{
 			$NN(JFormat::format(params...));
 		}
-		Header *getHeader(std::string name)
-		{
-			name = strToLower(name);
-			int size=m_headers.size();
-			for(int i=0;i<size;i++)
-			{
-				if(m_headers[i]->getName() == name)
-					return m_headers[i];
-			}
-			return nullptr;
-		}
-		void setHeader(std::string name, std::string content)
-		{
-			Header *h;
-			name = strToLower(name);
-			if((h=getHeader(name)) != nullptr)
-				h->setContent(content);
-			else
-				m_headers.push_back(new Header(name, content));
-		}
-		void addCookie(std::string name, std::string content)
-		{
-			m_headers.push_back(new Header("Set-Cookie", JFormat::format("{0}={1}", name, content)));
-		}
-
-		Request *getRequest(){ return request; }
 		std::function<void(void)> m_lambdaFunc;
 		bool m_sectionTracker;
 		BaseSection *m_section;
 
-		//This member variable intentionally breaks convention, to make development using the library more seamless and intuitive.
-		Request *request;
+		Request *m_request;
+		bool m_is_import;
 	private:
 		void generateHeaders()
 		{
@@ -356,7 +362,7 @@ namespace httpp
 				delete m_headers[i];
 			}
 			setHeader("Server", "htt++ 0.1 alpha");
-			if(request->getVersion() == "HTTP/1.1" || strToLower((*request)["Connection"]) == "keep-alive")
+			if(m_request->getVersion() == "HTTP/1.1" || strToLower((*m_request)["Connection"]) == "keep-alive")
 				setHeader("Connection", "keep-alive");
 			else
 				setHeader("Connection", "close");
@@ -374,6 +380,7 @@ namespace httpp
 		//involve stepping through the list, which is slower with a map.
 		//Search operations will not be considerably slower due to the small number of headers each page has.
 		std::vector<Header *> m_headers;
+		int m_tabpad;
 	};
 
 	class PageMap
