@@ -14,6 +14,7 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <boost/thread/mutex.hpp>
 
 /*
  * Macros used to create tags. These are only used locally and are used to quickly and easily define large numbers of similar classes that all derive from BaseTag.
@@ -24,13 +25,14 @@
 								{ \
 								private: \
 									static std::vector<std::string> m_arg_names; \
+									static boost::mutex TagMutex; \
 								protected: \
 									TagParam __VA_ARGS__; \
 									std::string get_args() \
 									{ \
-										return argify( m_arg_names, format_args(0, m_num_args, __VA_ARGS__) ); \
+										return argify( m_arg_names, format_args(0, m_num_args, __VA_ARGS__).c_str() ); \
 									} \
-									tag(){ populate_args( m_arg_names, #__VA_ARGS__ ); } \
+									tag(){ populate_args( m_arg_names, TagMutex, #__VA_ARGS__ ); } \
 									virtual ~tag(){ } \
 								}
 
@@ -79,20 +81,24 @@ namespace httpp
 		};
 
 		template<typename ...Params>
-		const char * format_args(int i, int max, TagParam &p, Params&... params)
+		std::string format_args(int i, int max, TagParam &p, Params&... params)
 		{
 			if(max==0)
 				return "";
-			static std::stringstream s;
+			std::stringstream s;
 			s.str("");
 			if(p == "")
+			{
 				s << format_args(i+1, max, params...);
+			}
 			else
+			{
 				s << i << "\v" << p.str() << "\a" << format_args(i+1, max-1, params...);
-			return s.str().c_str();
+			}
+			return s.str();
 		}
-		const char *format_args(int i, int max, TagParam &p);
-		void populate_args(std::vector<std::string> &v, std::string s);
+		std::string format_args(int i, int max, TagParam &p);
+		void populate_args(std::vector<std::string> &v, boost::mutex &TagMutex, const std::string &s);
 		std::string argify(std::vector<std::string> &v, const char *s);
 
 		/*

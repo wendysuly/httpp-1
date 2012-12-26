@@ -13,9 +13,9 @@ jmake.Libraries(
 
 jmake.Output("libhttpp.so")
 
-jmake.Standard("gnu++0x")
+jmake.Standard("gnu++11")
 
-jmake.Compiler("g++-4.7")
+jmake.Compiler("g++")
 
 jmake.Shared()
 

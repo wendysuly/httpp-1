@@ -11,11 +11,12 @@
 
 namespace httpp
 {
-	std::string strToLower(std::string s)
+	std::string strToLower(const std::string &s)
 	{
+		std::string ret;
 		int len = s.length();
 		for(int i=0;i<len;i++)
-			s[i]=tolower(s[i]);
-		return s;
+			ret+=tolower(s[i]);
+		return ret;
 	}
 }

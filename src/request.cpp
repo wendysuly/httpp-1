@@ -12,7 +12,7 @@
 
 namespace httpp
 {
-	void Request::create(std::string str)
+	void Request::create(const std::string &str)
 	{
 		int len = str.length();
 		int i = 0;
@@ -68,7 +68,7 @@ namespace httpp
 		//std::cout << "Received new request: " << str << std::endl;
 	}
 
-	void Request::addHeader(std::string str)
+	void Request::addHeader(const std::string &str)
 	{
 		int len = str.length();
 		int i = 0;
@@ -128,7 +128,7 @@ namespace httpp
 		}
 	}
 
-	void Request::addRequestVars(std::string str)
+	void Request::addRequestVars(const std::string &str)
 	{
 		std::string name;
 		std::string content;
@@ -191,7 +191,7 @@ namespace httpp
 		}
 	}
 
-	void Request::setCookies(std::string str)
+	void Request::setCookies(const std::string &str)
 	{
 		std::string name;
 		std::string content;
@@ -242,7 +242,7 @@ namespace httpp
 		m_cookies.push_back(Cookie(name, content));
 	}
 
-	std::string Request::getCookie(std::string name)
+	std::string Request::getCookie(const std::string &name)
 	{
 		for(unsigned int i = 0; i < m_cookies.size(); i++)
 		{

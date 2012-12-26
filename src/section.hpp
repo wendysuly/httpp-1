@@ -55,10 +55,10 @@ namespace httpp
 
 		std::string pad_tabs(){ return m_page->pad_tabs(); }
 		bool end_tag(){ return m_page->end_tag(); }
-		void tag(std::string tagname){ m_page->tag(tagname); }
-		void make_x_tag(std::string tagname){ m_page->make_x_tag(tagname); }
-		std::string make_inline_tag(std::string str, std::string tagname){ return m_page->make_inline_tag(str, tagname); }
-		std::string fix_tabs(std::string str){ return m_page->fix_tabs(str); }
+		void tag(const std::string &tagname){ m_page->tag(tagname); }
+		void make_x_tag(const std::string &tagname){ m_page->make_x_tag(tagname); }
+		std::string make_inline_tag(const std::string &str, const std::string &tagname){ return m_page->make_inline_tag(str, tagname); }
+		std::string fix_tabs(const std::string &str){ return m_page->fix_tabs(str); }
 
 		template<typename... Params>
 		void $(Params... params){ m_page->$(params...); }

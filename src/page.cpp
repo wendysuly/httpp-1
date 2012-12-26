@@ -40,27 +40,27 @@ namespace httpp
 		return false;
 	}
 
-	void BasePage::tag(std::string tagname)
+	void BasePage::tag(const std::string &tagname)
 	{
 		m_outstream << pad_tabs() << JFormat::format("<{0}{1}>", tagname, m_currentTag->get_args()) << std::endl;
 		delete m_currentTag;
 		m_tagStack.push_back(tagname);
 	}
 
-	std::string BasePage::make_inline_tag(std::string str, std::string tagname)
+	std::string BasePage::make_inline_tag(const std::string &str, const std::string &tagname)
 	{
 		std::string args = m_currentTag->get_args();
 		delete m_currentTag;
 		return JFormat::format("<{0}{1}>{2}</{0}>", tagname, args, str);
 	}
 
-	void BasePage::make_x_tag(std::string tagname)
+	void BasePage::make_x_tag(const std::string &tagname)
 	{
 		m_outstream << pad_tabs() << JFormat::format("<{0}{1} />", tagname, m_currentTag->get_args()) << std::endl;
 		delete m_currentTag;
 	}
 
-	std::string BasePage::fix_tabs(std::string str)
+	std::string BasePage::fix_tabs(const std::string &str)
 	{
 		int len = str.length();
 		std::string out;

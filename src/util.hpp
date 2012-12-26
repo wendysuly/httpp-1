@@ -14,7 +14,7 @@
 
 namespace httpp
 {
-	std::string strToLower(std::string s);
+	std::string strToLower(const std::string &s);
 }
 
 #endif /* UTIL_HPP_ */

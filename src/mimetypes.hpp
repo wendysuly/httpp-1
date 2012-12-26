@@ -11,13 +11,14 @@
 #define MIMETYPES_HPP_
 
 #include "jhash/JHash.hpp"
+#include <boost/thread/mutex.hpp>
 
 namespace httpp
 {
 	class MimeMap
 	{
 	public:
-		MimeMap(std::string ext, std::string type) : m_ext(ext), m_type(type) {}
+		MimeMap(const std::string &ext, const std::string &type) : m_ext(ext), m_type(type) {}
 		std::string getExtension(){ return m_ext; }
 		std::string getMimeType(){ return m_type.c_str(); }
 	private:

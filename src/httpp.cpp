@@ -16,30 +16,33 @@
 #include <thread>
 #include "request.hpp"
 #include "httpp.hpp"
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <queue>
+#include <sys/prctl.h>
+#include <map>
 
 namespace httpp
 {
-	JNet::ServerSocket Sock;
-	//When possible, we'll use a map to find our pages.
-	JHash::map<PageMap> BindMap(&PageMap::getName, false);
-	//Unfortunately, we can't do that with regular expressions.
-	//We have to put regular expressions into a vector and step through it.
-	//But at least we can minimize the size of the vector by keeping statically-named pages in the map.
-	std::vector<PageMap*> RegexMap;
 
-	void bind(std::string key, BasePage &page, std::string ContentType)
+	void httpp_server::bind(const std::string &key, BasePage &page, const std::string &ContentType)
 	{
 		PageMap *m = new PageMap("/"+key, page, ContentType);
 		BindMap.push(m);
 	}
 
-	void regex_bind(std::string key, BasePage &page, std::string ContentType)
+	void httpp_server::regex_bind(const std::string &key, BasePage &page, const std::string &ContentType)
 	{
 		PageMap *m = new PageMap("/"+key, page, ContentType);
 		RegexMap.push_back(m);
 	}
 
-	std::string ServerIdentStr = "htt++ Version 0.1 alpha. http://www.example.com/httpp/";
+	const std::string httpp_server::ServerIdentStr = "htt++ Version 0.1 alpha. http://www.example.com/httpp/";
+
+	std::queue<std::tuple<PageMap*, JNet::Connection*, Request*, int, std::string>> RequestQueue;
+	std::queue<JNet::Connection*> CloseQueue;
+	boost::mutex CloseMutex;
+	boost::mutex RequestMutex;
 
 #include "html_start.hpp"
 	DefinePage(Basic404)
@@ -55,7 +58,7 @@ namespace httpp
 				$strong("Error 404: File Not Found");
 				xBR;
 				xBR;
-				$i(ServerIdentStr);
+				$i(httpp_server::ServerIdentStr);
 			}
 		}
 	};
@@ -73,16 +76,16 @@ namespace httpp
 				$strong(JFormat::format("Error 400: {0}", getMessage()));
 				xBR;
 				xBR;
-				$i(ServerIdentStr);
+				$i(httpp_server::ServerIdentStr);
 			}
 		}
 	};
 
 	DefinePage(Static)
 	{
-		static std::string str;
-		static std::string ext;
-		static std::string type;
+		std::string str;
+		std::string ext;
+		std::string type;
 		str = request.getPath();
 		ext = "";
 		std::ifstream f;
@@ -113,7 +116,7 @@ namespace httpp
 	}
 #include "html_end.hpp"
 
-	PageMap *Regex_GetPage(std::string location)
+	PageMap *httpp_server::Regex_GetPage(const std::string &location)
 	{
 		unsigned int size = RegexMap.size();
 		for(unsigned int i=0;i<size;i++)
@@ -125,7 +128,7 @@ namespace httpp
 		return nullptr;
 	}
 
-	PageMap *GetPageMap(std::string location)
+	PageMap *httpp_server::GetPageMap(const std::string &location)
 	{
 		PageMap *page;
 		page = BindMap[location];
@@ -134,7 +137,7 @@ namespace httpp
 		return page;
 	}
 
-	BasePage &GetPageRef(const std::string &location)
+	BasePage &httpp_server::GetPageRef(const std::string &location)
 	{
 		PageMap *pagemap = GetPageMap(location);
 		if(pagemap != nullptr)
@@ -149,83 +152,170 @@ namespace httpp
 		}
 	}
 
-	BasePage *GetPage(const std::string &location)
+	BasePage *httpp_server::GetPage(const std::string &location)
 	{
 		return &GetPageRef(location);
 	}
 
-	void listen(int port)
+	void worker()
 	{
+		prctl(PR_SET_NAME,"htt++-worker",0,0,0);
+		std::map<BasePage*, BasePage*> Pages;
+		std::string body;
+		PageMap *pagemap;
+		BasePage *page;
+		BasePage *key;
+		Request *request;
+		std::string header;
+		std::string response;
+		JNet::Connection *c;
+		int code;
+		std::string msg;
+		std::tuple<PageMap*, JNet::Connection*, Request*, int, std::string> rq;
+		while(true)
+		{
+			RequestMutex.lock();
+			if(RequestQueue.empty())
+			{
+				RequestMutex.unlock();
+			}
+			else
+			{
+				rq = RequestQueue.front();
+				RequestQueue.pop();
+				RequestMutex.unlock();
+				pagemap = std::get<0>(rq);
+				c = std::get<1>(rq);
+				request = std::get<2>(rq);
+				code = std::get<3>(rq);
+				msg = std::get<4>(rq);
+				//operator()
+				key = &(pagemap->getPage());
+				if(Pages.find(key) == Pages.end())
+				{
+					page = (pagemap->getPage().clone());
+					Pages[key] = page;
+				}
+				else
+				{
+					page = Pages[key];
+				}
+				page->setStatus(static_cast<httpStatus>(code));
+				if(msg != "")
+				{
+					page->setMessage(msg);
+				}
+				body = (*page)(request);
+				if(pagemap->getContentType() != "" && page->getStatus() == httpStatus::rOK)
+					page->setHeader("Content-Type", pagemap->getContentType());
+				header = page->getHeaders();
+				response = header + body;
+				std::cout << std::endl << "Sending response headers: " << page->getHeaders();
+				c->Send(response);
+				//Revert any status changes we've made to the page, so it returns OK next time.
+				page->setStatus(httpStatus::rOK);
+				if(request->getVersion() != "HTTP/1.1" && strToLower((*request)["Connection"]) != "keep-alive")
+					CloseQueue.push(c);
+				delete request;
+			}
+			usleep(10000);
+		}
+	}
+
+	void httpp_server::listen(int port)
+	{
+		int i=0;
+		prctl(PR_SET_NAME,"htt++-listener",0,0,0);
 		if(BindMap["/400"] == nullptr)
 			bind("400", Basic400);
 		if(BindMap["/404"] == nullptr)
 			bind("404", Basic404);
 		PopulateMimeTypes();
 		JNet::Connection *c;
+		Sock.setTimeout(1);
 		Sock.listen(port);
-		std::cout << "htt++ listening on port " << port << std::endl;
 		int pnum = 0;
 		int numCPU = std::thread::hardware_concurrency();
-		while(pnum < numCPU && fork())
+/*		if(threaded)
 		{
-			pnum++;
 		}
-		std::cout << "New process spawned: " << pnum << std::endl;
+		else
+		{
+			while(pnum <= numCPU && fork())
+			{
+				pnum++;
+			}
+			if(pnum == 0)
+			{
+				return;
+			}
+		}*/
+		boost::thread b[numCPU];
+		for( ;pnum < numCPU; pnum++)
+		{
+			b[pnum] = boost::thread(&worker);
+		}
 		std::string str;
-		std::string body;
-		std::string header;
-		std::string response;
 		PageMap *pagemap;
-		BasePage *page;
+		int code;
+		std::string msg;
 		while(true)
 		{
 			Sock.HandleIO();
 			for(int i=0;i<Sock.GetNumConnections();i++)
 			{
 				c = Sock.GetConnection(i);
+				code = 200;
+				msg = "";
 				if(c->DataReady())
 				{
-					page = nullptr;
-					Request request;
+					pagemap = nullptr;
+					Request *request = new Request();
 					str = c->GetLine();
+					std::cout << "Got request: " << str << std::endl;
 					try
 					{
-						request.create(str);
+						request->create(str);
 						while((str = c->GetLine()) != "")
 						{
-							request.addHeader(str);
+							std::cout << "Got header: " << str << std::endl;
+							request->addHeader(str);
 						}
 						if((str = c->GetLine()) != "")
-							request.addRequestVars(str);
+						{
+							std::cout << "Got vars: " << str << std::endl;
+							request->addRequestVars(str);
+						}
 					}
 					catch(HTTPException &e)
 					{
 						std::stringstream s;
 						s << "/" << e.getCode();
 						pagemap = BindMap[s.str()];
-						page = &pagemap->getPage();
-						page->setStatus((static_cast<httpStatus>(e.getCode())));
-						page->setMessage(e.getMsg());
+						code = e.getCode();
+						msg = e.getMsg();
 					}
-					if(page == nullptr)
+					if(pagemap == nullptr)
 					{
-						pagemap = GetPageMap(request.getLocation());
-						page = &pagemap->getPage();
+						if((pagemap = GetPageMap(request->getLocation())) == nullptr)
+						{
+							pagemap = BindMap["/404"];
+							code = 404;
+						}
 					}
-					//operator()
-					body = (*page)(&request);
-					if(pagemap->getContentType() != "" && page->getStatus() == httpStatus::rOK)
-						page->setHeader("Content-Type", pagemap->getContentType());
-					header = page->getHeaders();
-					response = header + body;
-					//std::cout << std::endl << pnum << ": Sending response headers: " << page->getPage().getHeaders();
-					c->SendNow(response);
-					//Revert any status changes we've made to the page, so it returns OK next time.
-					page->setStatus(httpStatus::rOK);
-					if(request.getVersion() != "HTTP/1.1" && strToLower(request["Connection"]) != "keep-alive")
-						Sock.CloseConnection(i);
+					RequestMutex.lock();
+					RequestQueue.push(std::make_tuple(pagemap, c, request, code, msg));
+					RequestMutex.unlock();
 				}
 			}
+			CloseMutex.lock();
+			while(!CloseQueue.empty())
+			{
+				std::cout << "Closed : " << ++i << std::endl;
+				Sock.CloseConnection(CloseQueue.front());
+				CloseQueue.pop();
+			}
+			CloseMutex.unlock();
 		}
 	}
 }

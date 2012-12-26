@@ -13,8 +13,16 @@ namespace httpp
 {
 	JHash::string_map<MimeMap> MimeTypes(&MimeMap::getExtension, &MimeMap::getMimeType);
 
+	boost::mutex MimeTypeMutex;
+	bool MimeTypesPopulated;
+
 	void PopulateMimeTypes()
 	{
+		MimeTypeMutex.lock();
+		if(MimeTypesPopulated)
+		{
+			return;
+		}
 		//MimeTypes taken from Apache mime types
 		//http://svn.apache.org/viewvc/httpd/httpd/branches/2.2.x/docs/conf/mime.types?revision=1301896
 		//Most revisions listed here: http://svn.apache.org/viewvc/httpd/httpd/branches/2.2.x/docs/conf/mime.types?view=log
@@ -1002,5 +1010,7 @@ namespace httpp
 		MimeTypes.push(new MimeMap("zir", "application/vnd.zul"));
 		MimeTypes.push(new MimeMap("zirz", "application/vnd.zul"));
 		MimeTypes.push(new MimeMap("zmm", "application/vnd.handheld-entertainment+xml"));
+		MimeTypesPopulated = true;
+		MimeTypeMutex.unlock();
 	}
 }

@@ -11,7 +11,7 @@
 
 //Unfortunately, this can't be delcared in the header, but the tag classes themselves have to be.
 //So we have to declare each tag twice - once in the header, once here.
-#define STATIC_TAG(tag) std::vector<std::string> tag::m_arg_names = std::vector<std::string>()
+#define STATIC_TAG(tag) std::vector<std::string> tag::m_arg_names; boost::mutex tag::TagMutex;
 
 namespace httpp
 {
@@ -24,10 +24,14 @@ namespace httpp
 			*dest = '\0';
 		}
 
-		void populate_args(std::vector<std::string> &v, std::string s)
+		void populate_args(std::vector<std::string> &v, boost::mutex &TagMutex, const std::string &s)
 		{
+			TagMutex.lock();
 			if(!v.empty())
+			{
+				TagMutex.unlock();
 				return;
+			}
 			std::string cur;
 			int len = s.length();
 			for(int i=0;i<=len;i++)
@@ -42,35 +46,34 @@ namespace httpp
 					continue;
 				cur += tolower(s[i]);
 			}
+			TagMutex.unlock();
 		}
 
-		const char * format_args(int i, int max, TagParam &p)
+		std::string format_args(int i, int max, TagParam &p)
 		{
 			if(max == 0)
 				return "";
 			std::stringstream s;
 			if(p != "")
 				s << i << "\v" << p.str();
-			return s.str().c_str();
+			return s.str();
 		}
 
 		std::string argify(std::vector<std::string> &v, const char *s)
 		{
-			static char cur[256];
-			static char out[32768];
-			static const char *c;
+			char cur[256];
+			char out[32768];
+			const char *c;
 			out[0] = '\0';
 			cur[0] = '\0';
-			static unsigned int pos;
-			static unsigned int cpos;
-			pos = 0;
-			cpos = 0;
-			static int argnum;
-			argnum = 0;
+			unsigned int pos = 0;
+			unsigned int cpos = 0;
+			int argnum = 0;
 			for( ;*s != '\0';s++)
 			{
 				if(*s == '\v')
 				{
+					cur[cpos] = '\0';
 					argnum = atoi(cur);
 					cur[0] = '\0';
 					cpos = 0;
@@ -78,6 +81,7 @@ namespace httpp
 				}
 				if(*s == '\a')
 				{
+					cur[cpos] = '\0';
 					out[pos++] = ' ';
 
 					c = v[argnum].c_str();

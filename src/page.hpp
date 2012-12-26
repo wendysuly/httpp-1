@@ -28,6 +28,7 @@
 								public: \
 									page_##name() {} \
 									~page_##name() {} \
+									BasePage *clone() { return new page_##name(); } \
 								}; \
 							} \
 							extern Pages::page_##name name;
@@ -42,6 +43,7 @@
 								public: \
 									page_##name() {} \
 									~page_##name() {} \
+									BasePage *clone() { return new page_##name(); } \
 								}; \
 							} \
 							Pages::page_##name name; \
@@ -62,6 +64,7 @@ namespace httpp
 	public:
 		BasePage() : m_status(httpStatus::rOK), m_last_line_ended(true), m_message("OK") { }
 		virtual ~BasePage() {}
+		virtual BasePage *clone() = 0;
 		std::string operator()(Request *r, int tabpad = 0, bool is_import = false)
 		{
 			m_request=r;
@@ -76,7 +79,7 @@ namespace httpp
 		std::string getMessage(){return m_message;}
 		std::string getHeaders()
 		{
-			static std::stringstream ret;
+			std::stringstream ret;
 			ret.str("");
 			ret << m_outstream.str().length();
 			setHeader("Content-Length", ret.str());
@@ -91,9 +94,9 @@ namespace httpp
 		int getIntStatus(){return static_cast<int>(m_status);}
 
 
-		Header *getHeader(std::string name)
+		Header *getHeader(const std::string &sName)
 		{
-			name = strToLower(name);
+			std::string name = strToLower(sName);
 			int size=m_headers.size();
 			for(int i=0;i<size;i++)
 			{
@@ -102,16 +105,16 @@ namespace httpp
 			}
 			return nullptr;
 		}
-		void setHeader(std::string name, std::string content)
+		void setHeader(const std::string &sName, const std::string &content)
 		{
 			Header *h;
-			name = strToLower(name);
+			std::string name = strToLower(sName);
 			if((h=getHeader(name)) != nullptr)
 				h->setContent(content);
 			else
 				m_headers.push_back(new Header(name, content));
 		}
-		void addCookie(std::string name, std::string content)
+		void addCookie(const std::string &name, const std::string &content)
 		{
 			m_headers.push_back(new Header("Set-Cookie", JFormat::format("{0}={1}", name, content)));
 		}
@@ -129,17 +132,17 @@ namespace httpp
 			}
 			m_status = r;
 		}
-		void setMessage(std::string str){ m_message = str; }
+		void setMessage(const std::string &str){ m_message = str; }
 		void setTag(Tags::BaseTag *Tag){ m_currentTag = Tag; }
 	protected:
 		friend class BaseSection;
 
 		std::string pad_tabs();
 		bool end_tag();
-		void tag(std::string tagname);
-		void make_x_tag(std::string tagname);
-		std::string make_inline_tag(std::string str, std::string tagname);
-		std::string fix_tabs(std::string str);
+		void tag(const std::string &tagname);
+		void make_x_tag(const std::string &tagname);
+		std::string make_inline_tag(const std::string &str, const std::string &tagname);
+		std::string fix_tabs(const std::string &str);
 		bool execsection(BaseSection *p, std::function<void(void)> l);
 
 		httpStatus Import(BasePage &p);
@@ -386,7 +389,7 @@ namespace httpp
 	class PageMap
 	{
 	public:
-		PageMap(std::string s, BasePage &p, std::string ct) : m_name(s), m_content_type(ct), m_page(p) {}
+		PageMap(const std::string &s, BasePage &p, const std::string &ct) : m_name(s), m_content_type(ct), m_page(p) {}
 		std::string getName(){ return m_name; }
 		BasePage &getPage(){ return m_page; }
 		std::string getContentType(){ return m_content_type; }
