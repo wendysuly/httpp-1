@@ -779,7 +779,6 @@ namespace httpp
 		MimeTypes.push(new MimeMap("stl", "application/vnd.ms-pki.stl"));
 		MimeTypes.push(new MimeMap("str", "application/vnd.pg.format"));
 		MimeTypes.push(new MimeMap("stw", "application/vnd.sun.xml.writer.template"));
-		MimeTypes.push(new MimeMap("sub", "image/vnd.dvb.subtitle"));
 		MimeTypes.push(new MimeMap("sub", "text/vnd.dvb.subtitle"));
 		MimeTypes.push(new MimeMap("sus", "application/vnd.sus-calendar"));
 		MimeTypes.push(new MimeMap("susp", "application/vnd.sus-calendar"));
@@ -923,7 +922,6 @@ namespace httpp
 		MimeTypes.push(new MimeMap("wmv", "video/x-ms-wmv"));
 		MimeTypes.push(new MimeMap("wmx", "video/x-ms-wmx"));
 		MimeTypes.push(new MimeMap("wmz", "application/x-ms-wmz"));
-		MimeTypes.push(new MimeMap("wmz", "application/x-msmetafile"));
 		MimeTypes.push(new MimeMap("woff", "application/x-font-woff"));
 		MimeTypes.push(new MimeMap("wpd", "application/vnd.wordperfect"));
 		MimeTypes.push(new MimeMap("wpl", "application/vnd.ms-wpl"));
