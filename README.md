@@ -55,6 +55,7 @@ htt++ (pronounced "httplusplus") is a library designed to enable seamless, comfo
 To maximize performance and efficiency, htt++ also includes an embedded http server. Currently, this is the only method of using htt++ - there is no apache interface - but apache can still easily be used as a proxy if desired.
 
 **Contents:**
+
 1. TODO
 2. Dependencies
 3. Building and installing
@@ -292,6 +293,7 @@ Page(/*pagename*/)
 {
 	.../*code*/...
 }
+```
 
 A simple hello world index page, for example, might look like this:
 
@@ -610,6 +612,7 @@ void setHeader(std::string name, std::string content); //Sets the contents of a 
 Header *getHeader(std::string name); //Get the contents of a header with the given name.
 void setStatus(httpp::httpStatus r); //Sets the status of the page
 void setMessage(std::string str); //Sets the message sent back with the page; i.e., "PAGE NOT FOUND." This should be called after setStatus; setStatus has built-in default messages that it will set when it is called.
+```
 
 About the httpp::httpStatus enum:
 
