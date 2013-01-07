@@ -108,7 +108,7 @@ namespace httpp
 		}
 		else
 		{
-			std::cout << "Could not open requested file " << str << std::endl;
+			//std::cout << "Could not open requested file " << str << std::endl;
 			setStatus(httpStatus::rNOT_FOUND);
 			Import(httpp::Basic404);
 			f.close();
@@ -144,7 +144,7 @@ namespace httpp
 			return pagemap->getPage();
 		else
 		{
-			std::cout << "No mapping exists for " << location << std::endl;
+			//std::cout << "No mapping exists for " << location << std::endl;
 			pagemap = BindMap["/404"];
 			BasePage &page = pagemap->getPage();
 			page.setStatus(httpStatus::rNOT_FOUND);
@@ -210,7 +210,7 @@ namespace httpp
 					page->setHeader("Content-Type", pagemap->getContentType());
 				header = page->getHeaders();
 				response = header + body;
-				std::cout << std::endl << "Sending response headers: " << page->getHeaders();
+				//std::cout << std::endl << "Sending response headers: " << page->getHeaders();
 				c->Send(response);
 				//Revert any status changes we've made to the page, so it returns OK next time.
 				page->setStatus(httpStatus::rOK);
@@ -272,18 +272,18 @@ namespace httpp
 					pagemap = nullptr;
 					Request *request = new Request();
 					str = c->GetLine();
-					std::cout << "Got request: " << str << std::endl;
+					//std::cout << "Got request: " << str << std::endl;
 					try
 					{
 						request->create(str);
 						while((str = c->GetLine()) != "")
 						{
-							std::cout << "Got header: " << str << std::endl;
+							//std::cout << "Got header: " << str << std::endl;
 							request->addHeader(str);
 						}
 						if((str = c->GetLine()) != "")
 						{
-							std::cout << "Got vars: " << str << std::endl;
+							//std::cout << "Got vars: " << str << std::endl;
 							request->addRequestVars(str);
 						}
 					}
@@ -311,7 +311,7 @@ namespace httpp
 			CloseMutex.lock();
 			while(!CloseQueue.empty())
 			{
-				std::cout << "Closed : " << ++i << std::endl;
+				//std::cout << "Closed : " << ++i << std::endl;
 				Sock.CloseConnection(CloseQueue.front());
 				CloseQueue.pop();
 			}
