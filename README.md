@@ -529,7 +529,7 @@ When executed, the above page would output:
 </html>
 ```
 
-If you don't want to send any code to the section, you can use the macro SECT() (in capital letters) to call it. In the above case, you would simply call SECT(MsgContainer, "foo", "bar", "baz");
+If you don't want to send any code to the section, you can use the macro SECT() (in capital letters) to call it. In the above case, you would simply call SECT(NestedDiv, "foo", "bar", "baz");
 
 Of course, as you likely surmized, a Section is simply a class. If you want to define it as a traditional class, you can do so - the macros in this case are primarily a matter of coherence with the rest of the library, so that sections and pages follow a similar format.
 
