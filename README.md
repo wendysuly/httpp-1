@@ -42,7 +42,7 @@ Page(Readme)
 </html>
 ```
 
-**htt++ alpha 0.1**
+**htt++ alpha 0.1**  
 Dynamic Web Development in C++
 
 Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.
