@@ -42,8 +42,8 @@ Contents:
   3.3 Text
   3.4 Pages
   3.5 Sections
-  3.6 GET and POST variables
-  3.7 Accessing request data
+  3.6 Accessing request data
+  3.7 GET and POST variables
   3.8 Adjusting response data
   3.9 Pages inside pages
   3.10 Loading static content from disk
@@ -58,7 +58,6 @@ Contents:
 As this project is very much still in its early stages, there are a lot of things that need to be done to make it more accessible to the general public. Among those currently on the to-do list:
 
 -Many http standard features are currently missing. The project works, but it works in a somewhat limited scope at this moment. However, with the possible exceptions of some advanced cookie functionality and basic http authentication, it should cover the scope of most web projects.
--I will be adding shared global variables that can be accessed across processes
 -Virtual hosts, proxies, and other features for the embedded http server
 -An apache/cgi interface for htt++
 -And finally, better documentation to come!
@@ -111,11 +110,13 @@ htt++ is written as a shared object library. In order to use it, you will have t
 
 In order to use htt++, the first thing you have to do is start up the http server. This is as simple as:
 
-httpp::listen(<port>);
+httpp::httpp_server Server;
+Server.listen(<port>);
 
 So to listen on port 8000:
 
-httpp::listen(8000);
+httpp::httpp_server Server;
+Server.listen(8000);
 
 Note that listening on any port below 1024 (i.e., port 80) requires the process to be run with root permissions.
 
@@ -123,7 +124,11 @@ Note that listening on any port below 1024 (i.e., port 80) requires the process 
 3.2 Tags
 ==================================================
 
-In htt++, tags are embedded as part of the C++ code, using C++ syntax. There are several ways you can call a tag. For this section, I will use the div tag as an example.
+In htt++, tags are embedded as part of the C++ code, using C++ syntax. There are several ways you can call a tag.
+
+Before using any tags, though, it's very important that you wrap the section with the correct headers. The headers are <httpp/html_start.hpp> and <http/html_end.hpp>, and these should be #included at the start and end of any httpp code. html_start.hpp defines a huge number of macros that make the whole system work, but some of them can conflict with other libraries and code - for example, the macro "b" for the <b> tag - so html_end.hpp summarily undefines all of the macros html_start.hpp defines. This lets the library be used harmoniously with other libraries.
+
+For this section, I will use the div tag as an example.
 
 --------------------------------------------------
 3.2.1 - Including tags with attributes
@@ -307,23 +312,55 @@ DefinePage(index)
 	}
 }
 
+One caveat here, as mentioned above, is that any page (or group of pages) must be surrounded by the html_start and html_end headers, like so:
+
+#include <httpp/html_start.hpp>
+DefinePage(index)
+{
+  static std::string msg = "Hello, world!";
+	static std::string loadmsg = "";
+	bool showAlert = True;
+	HTML
+	{
+		HEAD
+		{
+			xscript(src="foo.js");
+			$title(msg);
+		}
+		if(ShowAlert == True):
+			loadmsg = "alert(\""+msg+"\");";
+		else
+			loadmsg = "";
+		body(background="#FFFFFF" onload=loadmsg)
+		{
+			div(Class="bar" id="baz")
+			{
+				$span(msg, id="qux");
+			}
+		}
+	}
+}
+#include <httpp/html_end.hpp>
+
+Without the former, no html tags will be defined, and without the latter, any code that comes after it may run into naming conflicts with the tag macros.
+
 Now, you've got your page separated into a header file and a source file and you're meeting declaration conventions, but there's one more thing you have to do to allow access to it: you have to tell the application it exists, and tell it how you want it to serve it to the user. To do this, you'll have to add a page binding during initialization of your app. Because the http::listen() function is a blocking main application loop, this has to be done BEFORE the listen() function is called.
 
-To bind a page, you can use either httpp::bind() or httpp::regex_bind(). Both of these take two arguments - the first is a string, while the second is the name of one of the pages you have defined. The string and the page name DO NOT have to match. For example, to bind the above-defined page to "example.com/index", you would call:
+To bind a page, you can use either httpp::httpp_server::bind() or httpp::httpp_server::regex_bind(). Both of these take two arguments - the first is a string, while the second is the name of one of the pages you have defined. The string and the page name DO NOT have to match. For example, to bind the above-defined page to "example.com/index", you would call:
 
-httpp::bind("index", index);
+Server.bind("index", index);
 
 Alternatively, to bind the above-defined page to "example.com/index.html", you would call:
 
-httpp::bind("index.html", index);
+Server.bind("index.html", index);
 
 In some cases, you may also want to bind a page to a pattern. In this case, you can use httpp::regex_bind() to bind it to a regular expression. For example, to bind the same page to anything ending in html, you would call:
 
-httpp::regex_bind(".*\\.html", index);
+Server.regex_bind(".*\\.html", index);
 
 However, regular expression searching is less performant than the first method - even on an exact match string with no wildcards - so if you aren't defining a pattern, it's highly recommended to use bind() over regex_bind().
 
-If you define multiple static bindings with the same key, the most recently defined one will take precedence over any previous definitions. On the other hand, though, if the user requests a page that matches multiple paterns, the first one defined will be the one used.
+If the user requests a page that matches multiple paterns, the first matching expression defined will be the one used. It is not possible to statically bind two pages to the same key (an exception will be thrown).
 
 ==================================================
 3.5 Sections
@@ -408,7 +445,7 @@ Page(index)
   }
 }
 
-As mentioned in the comment, take not of the semicolon! A section must have a semicolon following its code block, unlike tags and other blocks of code. Unfortunately, because what you're defining in this particular code block is a lambda function, there's no way around this.
+As mentioned in the comment, take note of the semicolon! A section must have a semicolon following its code block, unlike tags and other blocks of code. Unfortunately, because what you're defining in this particular code block is a lambda function, there's no way around this.
 
 When executed, the above page would output:
 
@@ -424,7 +461,7 @@ When executed, the above page would output:
   </body>
 </html>
 
-If you don't want to send any code to the section, you can use the macro SECT() (in capital letters) to do so. In the above case, you would simply call SECT(MsgContainer, "foo", "bar", "baz");
+If you don't want to send any code to the section, you can use the macro SECT() (in capital letters) to call it. In the above case, you would simply call SECT(MsgContainer, "foo", "bar", "baz");
 
 Of course, as you likely surmized, a Section is simply a class. If you want to define it as a traditional class, you can do so - the macros in this case are primarily a matter of coherence with the rest of the library, so that sections and pages follow a similar format.
 
@@ -454,8 +491,24 @@ public:
 
 When defined as traditional classes, sections are still called using the sect() macro.
 
+Also, like pages, sections must be surrounded with html_start and html_end inclues.
+
 ==================================================
-3.6 GET and POST variables
+3.6 Accessing request data
+==================================================
+
+Request data is available through the "request" pointer in any page or in any section. Request data currently has the following methods:
+
+std::string getHeader(std::string name){ return m_headers[name]; } //Returns a header with the given name
+std::string operator[](std::string name){ return m_headers[name]; } //Returns a header with the given name
+std::string getMethod(){ return m_method; } //Returns the request method ("POST", "GET", etc)
+std::string getLocation(){ return m_location; } //Returns the location of the page that was accessed - i.e., "/index"
+std::string getPath() { return m_location.erase(0, 1); } //Returns the location without the starting slash
+std::string getVersion(){ return m_http_version; } //Returns the HTTP version of the request
+std::vector<std::string> getCookies(){ return m_cookies; } //Returns a vector of cookies sent by the client
+
+==================================================
+3.7 GET and POST variables
 ==================================================
 
 Accessing GET and POST variables is fairly straight-forward, and both are accessed in the same way. To access a variable named, e.g., FormField1 from within a page or section, simply call:
@@ -471,20 +524,6 @@ So if your variable is an integer, you can call:
 request.getVar<int>("FormField1");
 
 And this will return an integer type.
-
-==================================================
-3.7 Accessing request data
-==================================================
-
-Request data is available through the "request" pointer in any page or in any section. Request data currently has the following methods:
-
-std::string getHeader(std::string name){ return m_headers[name]; } //Returns a header with the given name
-std::string operator[](std::string name){ return m_headers[name]; } //Returns a header with the given name
-std::string getMethod(){ return m_method; } //Returns the request method ("POST", "GET", etc)
-std::string getLocation(){ return m_location; } //Returns the location of the page that was accessed - i.e., "/index"
-std::string getPath() { return m_location.erase(0, 1); } //Returns the location without the starting slash
-std::string getVersion(){ return m_http_version; } //Returns the HTTP version of the request
-std::vector<std::string> getCookies(){ return m_cookies; } //Returns a vector of cookies sent by the client
 
 ==================================================
 3.8 Adjusting response data
@@ -529,12 +568,7 @@ httpp::regex_bind(".*\\.jpg", httpp::Static);
 4. Known issues and troubleshooting
 ==================================================
 
-The biggest known issue with htt++ arises from its unfortunately unavoidable use of macros for tags. (See "OMG MACROS?!?!?" below.) There are conflicts that can arise from this; in order to resolve these conflicts, you have two options:
-
-1) Ensure that httpp.hpp is the last file on your file include list. Other includes can conflict - particularly the boost libraries.
-2) Undefine the tag that is causing a conflict - i.e., #undef b to undefine the <b> tag. If you need the tag again later, you will need to #include <tags.hpp>
-
-Most other known issues are simple missing features that need to be included; rest assured, as development continues, these features will be added.
+Most current known issues are simple missing features that need to be included; rest assured, as development continues, these features will be added.
 
 ==================================================
 5. OMG MACROS?!?!?
