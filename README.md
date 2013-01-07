@@ -1,0 +1,668 @@
+```c++
+Page(Readme)
+{
+	HTML
+	{
+		HEAD
+		{
+			$title("htt++ alpha 0.1 release readme");
+		}
+		body(style="background-color:white")
+		{
+			div(id="header")
+			{
+				$strong("htt++ alpha 0.1");
+				xBR;
+				$("Dynamic Web Development in C++");
+			}
+			div(id="NOTE")
+			{
+				$("Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.");
+			}
+		}
+	}
+}
+```
+
+```html
+<html>
+	<head>
+		<title>htt++ alpha 0.1 release readme</title>
+	</head>
+	<body style="background-color:white">
+		<div id="header">
+			<strong>htt++ alpha 0.1</strong>
+			<br />
+			Dynamic Web Development in C++
+		</div>
+		<div id="NOTE">
+			Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.
+		</div>
+	</body>
+</html>
+```
+
+**htt++ alpha 0.1**
+Dynamic Web Development in C++
+
+Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.
+
+INTRODUCTION:
+=============
+
+htt++ (pronounced "httplusplus") is a library designed to enable seamless, comfortable development of web applications using C++. The library allows the developer to write fluid, clean code that combines C++ and HTML with a consistent, C++-like syntax, while still maintaining the stylistic heirarchical approach of HTML. This makes it a great approach for people who prefer to design their pages using HTML (as opposed to traditional GUI programming methods, as with WT), but still want to harness the power and speed of C++ to build their dynamic content.
+
+To maximize performance and efficiency, htt++ also includes an embedded http server. Currently, this is the only method of using htt++ - there is no apache interface - but apache can still easily be used as a proxy if desired.
+
+**Contents:**
+1. TODO
+2. Dependencies
+3. Building and installing
+4. Usage
+    1. Starting the application
+    2. Tags
+    3. Text
+    4. Pages
+    5. Sections
+    6. Accessing request data
+    7. GET and POST variables
+    8. Adjusting response data
+    9. Pages inside pages
+    10. Loading static content from disk
+5. Troubleshooting and known issues
+6. OMG MACROS?!?!?
+7. Questions and answers
+
+1. TODO
+=======
+
+As this project is very much still in its early stages, there are a lot of things that need to be done to make it more accessible to the general public. Among those currently on the to-do list:
+
+- Many http standard features are currently missing. The project works, but it works in a somewhat limited scope at this moment. However, with the possible exceptions of some advanced cookie functionality and basic http authentication, it should cover the scope of most web projects.
+- Virtual hosts, proxies, and other features for the embedded http server
+- An apache/cgi interface for htt++
+- And finally, better documentation to come!
+
+2. Dependencies
+===============
+
+htt++ has relatively few dependencies; most of the code used is self-written and self-contained. For the most part, the only dependencies are other libraries available in the same repository. The required libraries are all available here:
+
+- JNet - http://github.com/ShadauxCat/JNet
+- JFormat - http://github.com/ShadauxCat/JFormat
+- JHash - http://github.com/ShadauxCat/JHash
+
+In addition, the current implementation requires the boost-regex and boost-thread libraries, available at www.boost.org. This requirement will be removed when the g++ implement of the C++11 regex libraries is complete.
+
+To build the project, you will also need jmake and python 2.7 or greater. You can obtain jmake through pip by invoking "pip install jmake"
+
+Finally, because this project contains a large amount of C++11 code, it must be compiled using g++-4.7 or above.
+
+3. Building and installing
+==========================
+
+To build htt++, you simply need to invoke the included make.py script:
+
+    ./make.py
+
+This will handle building and linking the project.
+
+To install:
+
+    sudo ./make.py --install
+
+This will install, by default, to /usr/local/lib and /usr/local/include. If you would like to change those directories, add --overrides="InstallOutput('/path/to/library/install');InstallHeaders('/path/to/header/install')" (*with* the quotes) when running the install command. You can omit one or the other if you only want to change one.
+
+If you would like to build with debug symbols, add the word "debug" to both of those commands.
+
+The build system will automatically detect which files need to be built and which don't, even down to determining which header changes necessitate a rebuild to which files. It will also determine if a shared library has been altered since the last build and rebuild the entire project for you. However, if for any reason you need to clean the project, you can invoke:
+
+    ./make.py --clean
+
+4. Usage
+========
+
+htt++ is written as a shared object library. In order to use it, you will have to include the file "httpp.hpp" - but before explaining anything else, a word of warning about this include file: In order to enable the syntax used by htt++, a good number of macros had to be defined for the tags. As a result, some tags that are common names for variables (such as "b" and "i") can cause conflict with other header files. To prevent this from happening, always make sure that httpp.hpp is the LAST file you include in your inclusions list. Also, in the event you need to use one of those variables yourself, simply #undef the macro, and then call REDEFINE_TAGS().
+
+4.1 Starting the application
+============================
+
+In order to use htt++, the first thing you have to do is start up the http server. This is as simple as:
+
+```C++
+httpp::httpp_server Server;
+Server.listen(<port>);
+```
+
+So to listen on port 8000:
+
+```c++
+httpp::httpp_server Server;
+Server.listen(8000);
+```
+
+Note that listening on any port below 1024 (i.e., port 80) requires the process to be run with root permissions.
+
+4.2 Tags
+========
+
+In htt++, tags are embedded as part of the C++ code, using C++ syntax. There are several ways you can call a tag.
+
+Before using any tags, though, it's very important that you wrap the section with the correct headers. The headers are <httpp/html_start.hpp> and <http/html_end.hpp>, and these should be #included at the start and end of any httpp code. html_start.hpp defines a huge number of macros that make the whole system work, but some of them can conflict with other libraries and code - for example, the macro "b" for the <b> tag - so html_end.hpp summarily undefines all of the macros html_start.hpp defines. This lets the library be used harmoniously with other libraries.
+
+For this section, I will use the div tag as an example.
+
+
+### 3.2.1 - Including tags with attributes
+
+
+Including a tag with attributes follows the following syntax:
+
+```c++
+div(<attributes>)
+{
+	.../*content*/...;
+}
+```
+
+For example:
+
+```c++
+div(Class="foo", id="bar")
+{
+	$("Hello, World!");
+}
+```
+
+When executed, this will produce:
+
+```html
+<div class="foo" id="bar">
+ 	Hello, World!
+</div>
+```
+
+A few important things to note on this:
+
+1. When a tag is called, it creates a code block. Scope inside the tag is handled according to C++ standards - a variable declared inside a div is not accessible outside of that div.
+2. At the end of the code block, the tag is automatically closed. You do not need to manually close the tag.
+3. Indentation is automatically handled. That means no matter how you indent your code in the C++, the resulting HTML wll always be properly indented - children will always be indented one tab character further than their parents, and the indentation will automatically decrease each time a tag is closed.
+4. Attributes are case-sensitive, and you can't use attributes that aren't valid for the tag. The vast majority of attributes require all lower-case; however, there are some exceptions where the attribute must be capitalized. These include attributes that share a name with C++ keywords (such as class), and attributes that share names with tags (such as the title attribute of some tags).
+5. You CAN pass local variables into the tag attributes - HOWEVER, they must be declared static to be passed.
+
+### 3.2.2 Tags without attributes
+
+If you want to use a tag without passing any attributes, there are two ways to accomplish this. The first is the obvious:
+
+```c++
+div()
+{
+}
+```
+
+The second way is to simply capitalize the tag and leave off the parentheses:
+
+```c++
+DIV
+{
+}
+```
+
+Both of these will have the exact same result.
+
+### 4.2.3 Inline tags
+
+If you are calling a tag to surround a single line of text, you can call it as an inline tag. This type of call requires a single first argument - the string to be enclosed in the tag - followed by any attributes you'd like to set, and does not use any curly braces. When printed, the tag and its contents will all be printed on one line. This is done by adding a dollar sign to the beginning of the tag name. For example:
+
+```c++
+$div("Hello, World!", Class="foo", id="bar");
+```
+
+Produces:
+
+```html
+<div class="foo" id="bar">Hello, World!</div>
+```
+
+Additionally, by adding a second dollar sign to the beginning of the tag, you can take the result as a std::string to print later, rather than printing it right away, as such:
+
+```c++
+std::string s = $$div("Hello, World!", Class="fo", id="bar");
+```
+
+There is no all-capital version of either of these.
+
+### 4.2.4 XHTML self-closing tags
+
+To create a self-closing tag, you can simply add an x to the beginning of a tag name. This works for both tags with attributes, and tags without. I.e.:
+
+```c++
+xdiv(Class="foo", id="bar");
+```
+
+Produces:
+
+```html
+<div class="foo" id="bar" />
+```
+
+And:
+
+```c++
+xDIV;
+```
+
+Produces:
+
+```html
+<div />
+```
+
+4.3 Text
+--------
+
+Basic text is output using the function $(), which is a member function of the page and section objects (whose creation is defined below). This syntax was chosen to make printing text as simple and HTML-like as possible within the C++ syntax, and it comes with many variations.
+
+```c++
+$() //This function prints the given text, and follows it with a newline. It takes any number of arguments, which can be of any type that can be converted to a string using a std::stringstream. These arguments are separated by spaces. All variations follow this exact functionality except where specified otherwise.
+$S() //This function does not place a space between the arguments, but concatenates them directly.
+$N() //This ends the text with a space, rather than a newline. In the HTML output, this will usually be presented the same as $() on the rendered page, but will be formatted differently in the source.
+$NN() //This does not add anything to the end of the string. Useful for building a contiguous string in the output - any successive call of these functions will be appended directly to the end of the text sent to this one.
+$SN() //No spaces between arguments, one space appended to the end.
+$SNN() //No spaces between arguments, nothing appended at the end.
+```
+
+Additionally, the variants $f(), $Nf(), and $NNf() exist to make use of the JFormat library, and accept arguments with a format string. The format of this is as follows:
+
+```c++
+$f("{0}, {1}, and {2} make a nice {0}{1}{2} for {3}", "foo", "bar", "baz", "qux");
+```
+
+The numbers in between curly brackets in the format string are replaced by the arguments in the order they're passed, much like python's str.format(), so this will output:
+
+foo, bar, and baz make a nice foobarbaz for qux.
+
+4.4 Pages
+---------
+
+All of the above is useless without the ability to define pages. A page is defined simply as follows:
+
+```c++
+Page(/*pagename*/)
+{
+	.../*code*/...
+}
+
+A simple hello world index page, for example, might look like this:
+
+```c++
+Page(index)
+{
+	static std::string msg = "Hello, world!";
+	static std::string loadmsg = "";
+	bool showAlert = True;
+	HTML
+	{
+		HEAD
+		{
+			xscript(src="foo.js");
+			$title(msg);
+		}
+		if(ShowAlert == True):
+			loadmsg = "alert(\""+msg+"\");";
+		else
+			loadmsg = "";
+		body(background="#FFFFFF" onload=loadmsg)
+		{
+			div(Class="bar" id="baz")
+			{
+				$span(msg, id="qux");
+			}
+		}
+	}
+}
+```
+
+You can see in this example the synergy of C++ and HTML. But there's a little more to it than this: This syntax works fine in a small application with only a few files contained in one source file, or in applications where the page can be isolated in a header file that's only included and accessed by one source file per page. However, in more complicated applications it may be necessary to include the same header in two source files - for example, if you have one page that needs to call another. Or it simply may be desirable to you to have the page declaration in a header file and the definition in a self-contained source file, the same way C++ classes are conventionally implemented. (In fact, because a page is truly a C++ class itself, it is certainly desirable and recommended to do them this way as well!) In this case, you need to follow the following syntax:
+
+In the header file:
+
+```c++
+DeclarePage(index);
+```
+
+And in the source file:
+
+```c++
+DefinePage(index)
+{
+	static std::string msg = "Hello, world!";
+	static std::string loadmsg = "";
+	bool showAlert = True;
+	HTML
+	{
+		HEAD
+		{
+			xscript(src="foo.js");
+			$title(msg);
+		}
+		if(ShowAlert == True):
+			loadmsg = "alert(\""+msg+"\");";
+		else
+			loadmsg = "";
+		body(background="#FFFFFF" onload=loadmsg)
+		{
+			div(Class="bar" id="baz")
+			{
+				$span(msg, id="qux");
+			}
+		}
+	}
+}
+```
+
+One caveat here, as mentioned above, is that any page (or group of pages) must be surrounded by the html_start and html_end headers, like so:
+
+```c++
+#include <httpp/html_start.hpp>
+DefinePage(index)
+{
+	static std::string msg = "Hello, world!";
+	static std::string loadmsg = "";
+	bool showAlert = True;
+	HTML
+	{
+		HEAD
+		{
+			xscript(src="foo.js");
+			$title(msg);
+		}
+		if(ShowAlert == True):
+			loadmsg = "alert(\""+msg+"\");";
+		else
+			loadmsg = "";
+		body(background="#FFFFFF" onload=loadmsg)
+		{
+			div(Class="bar" id="baz")
+			{
+				$span(msg, id="qux");
+			}
+		}
+	}
+}
+#include <httpp/html_end.hpp>
+```
+
+Without the former, no html tags will be defined, and without the latter, any code that comes after it may run into naming conflicts with the tag macros.
+
+Now, you've got your page separated into a header file and a source file and you're meeting declaration conventions, but there's one more thing you have to do to allow access to it: you have to tell the application it exists, and tell it how you want it to serve it to the user. To do this, you'll have to add a page binding during initialization of your app. Because the http::listen() function is a blocking main application loop, this has to be done BEFORE the listen() function is called.
+
+To bind a page, you can use either httpp::httpp_server::bind() or httpp::httpp_server::regex_bind(). Both of these take two arguments - the first is a string, while the second is the name of one of the pages you have defined. The string and the page name DO NOT have to match. For example, to bind the above-defined page to "example.com/index", you would call:
+
+```c++
+Server.bind("index", index);
+```
+
+Alternatively, to bind the above-defined page to "example.com/index.html", you would call:
+
+```c++
+Server.bind("index.html", index);
+```
+
+In some cases, you may also want to bind a page to a pattern. In this case, you can use httpp::regex_bind() to bind it to a regular expression. For example, to bind the same page to anything ending in html, you would call:
+
+```c++
+Server.regex_bind(".*\\.html", index);
+```
+
+However, regular expression searching is less performant than the first method - even on an exact match string with no wildcards - so if you aren't defining a pattern, it's highly recommended to use bind() over regex_bind().
+
+If the user requests a page that matches multiple paterns, the first matching expression defined will be the one used. It is not possible to statically bind two pages to the same key (an exception will be thrown).
+
+4.5 Sections
+------------
+
+In addition to pages, htt++ has a concept of sections - small bits of html that are meant to be reused, much like functions in traditional code, but do not make up an entire coherent page on their own. A section may be a common container, a page header, or any other piece of shared HTML. While you can define and use traditional functions for some repetitive tasks, sections allow you to actually include htt++-syntax HTML output in these recurrent blocks of code.
+
+Sections are slightly more complicated than pages. To declare a section, use the following format:
+
+```c++
+Section(/*name*/)
+{
+SectionVars:
+	//Declare any variables here that you would like to be able to pass from a page to a section
+SectionInfo:
+	//Declare your actual section here.
+};
+```
+
+Note that, like a class definition and UNLIKE a page definition, a section definition must end in a semicolon.
+
+Inside your SectionInfo section, you need two types of information. The first is a set of class constructors for the section class, which is defined by the Section macro. These work like any regular class constructor, and will be called every time your section is used in your code. The second piece of information you need is a section layout, which is defined with the SectionLayout macro. The end result might look like this:
+
+```c++
+Section(NestedDiv)
+{
+SectionVars:
+	std::string str1, str2;
+	static std::string divclass;
+SectionInfo:
+	NestedDiv(std::string s1, std::string s2, std::string s3) : str1(s1), str2(s2) {divclass=s3;}
+
+	SectionLayout()
+	{
+		div(Class=divclass)
+		{
+			$(str1);
+			div(Class=divclass)
+			{
+				$(str2);
+			}
+		}
+	}
+}
+```
+
+Note here again that variables passed as tag attributes must be defined as static. These can be set in the constructor as you see above without causing any problems - just be aware that if you have a constructor that does not set it, it will keep the same value it had the last time it was called.
+
+There's one more thing to mention about sections: when they're called, they can be used to pass code in to be executed inside the section as a lambda. (Calling sections will be explained below.) This lambda function can be executed by calling content() within the SectionLayout section:
+
+```c++
+Section(NestedDiv)
+{
+SectionVars:
+	std::string str1, str2;
+	static std::string divclass;
+SectionInfo:
+	NestedDiv(std::string s1, std::string s2, std::string s3) : str1(s1), str2(s2) {divclass=s3;}
+
+	SectionLayout()
+	{
+		div(Class=divclass)
+		{
+			$(str1);
+			div(Class=divclass)
+			{
+				$(str2);
+				content();
+			}
+		}
+	}
+}
+```
+
+Once a section is defined, it can be called from inside any page by using the sect() macro, as follows:
+
+```c++
+Page(index)
+{
+	HTML
+	{
+		BODY
+		{
+			sect(NestedDiv, "foo", "bar", "baz")
+			{
+				$div("Qux!");
+			}; //NOTE THE SEMICOLON!
+		}
+	}
+}
+```
+
+As mentioned in the comment, take note of the semicolon! A section must have a semicolon following its code block, unlike tags and other blocks of code. Unfortunately, because what you're defining in this particular code block is a lambda function, there's no way around this.
+
+When executed, the above page would output:
+
+```html
+<html>
+	<body>
+		<div class="baz">
+			foo
+			<div class="baz">
+				bar
+				<div>Qux!</div>
+			</div>
+		</div>
+	</body>
+</html>
+```
+
+If you don't want to send any code to the section, you can use the macro SECT() (in capital letters) to call it. In the above case, you would simply call SECT(MsgContainer, "foo", "bar", "baz");
+
+Of course, as you likely surmized, a Section is simply a class. If you want to define it as a traditional class, you can do so - the macros in this case are primarily a matter of coherence with the rest of the library, so that sections and pages follow a similar format.
+
+To define the above section as a traditional class, you would write it as follows:
+
+```c++
+class NestedDiv : public httpp::BaseSection
+{
+private:
+	std::string str1, str2;
+	static std::string divclass;
+public:
+	NestedDiv(std::string s1, std::string s2, std::string s3) : str1(s1), str2(s2) {divclass=s3;}
+
+	void do_layout(std::function<void(void)> content)
+	{
+		div(Class=divclass)
+		{
+			$(str1);
+			div(Class=divclass)
+			{
+				$(str2);
+				content();
+			}
+		}
+	}
+}
+```
+
+When defined as traditional classes, sections are still called using the sect() macro.
+
+Also, like pages, sections must be surrounded with html_start and html_end inclues.
+
+4.6 Accessing request data
+--------------------------
+
+Request data is available through the "request" pointer in any page or in any section. Request data currently has the following methods:
+
+```c++
+std::string getHeader(std::string name){ return m_headers[name]; } //Returns a header with the given name
+std::string operator[](std::string name){ return m_headers[name]; } //Returns a header with the given name
+std::string getMethod(){ return m_method; } //Returns the request method ("POST", "GET", etc)
+std::string getLocation(){ return m_location; } //Returns the location of the page that was accessed - i.e., "/index"
+std::string getPath() { return m_location.erase(0, 1); } //Returns the location without the starting slash
+std::string getVersion(){ return m_http_version; } //Returns the HTTP version of the request
+std::vector<std::string> getCookies(){ return m_cookies; } //Returns a vector of cookies sent by the client
+```
+
+4.7 GET and POST variables
+--------------------------
+
+Accessing GET and POST variables is fairly straight-forward, and both are accessed in the same way. To access a variable named, e.g., FormField1 from within a page or section, simply call:
+
+```c++
+request.getVar("FormField1");
+```
+
+By default, this returns a std::string object; however, it can return any type that's writable using std::istream::operator>> as follows:
+
+```c++
+request.getVar<type>("FormField1");
+```
+
+So if your variable is an integer, you can call:
+
+```c++
+request.getVar<int>("FormField1");
+```
+
+And this will return an integer type.
+
+4.8 Adjusting response data
+---------------------------
+
+Pages can use the following methods to change the response data sent back to the client:
+
+```c++
+void addCookie(std::string name, std::string content); //Adds a cookie with the first argument as its name and the second as its content.
+void setHeader(std::string name, std::string content); //Sets the contents of a non-cookie header. If the header exists its contents will be changed; otherwise, it will be created
+Header *getHeader(std::string name); //Get the contents of a header with the given name.
+void setStatus(httpp::httpStatus r); //Sets the status of the page
+void setMessage(std::string str); //Sets the message sent back with the page; i.e., "PAGE NOT FOUND." This should be called after setStatus; setStatus has built-in default messages that it will set when it is called.
+
+About the httpp::httpStatus enum:
+
+This is an enum class, currently defined as follows:
+
+```c++
+enum class httpStatus { rOK = 200, rBAD_REQUEST = 400, rNOT_FOUND = 404 };
+```
+
+Other HTTP response codes are currently not defined. These will be added in a future release.
+
+4.9 Pages inside pages
+----------------------
+
+If you want to include one page inside another page, rather than defining a section - say, for example, you have a standalone page but want to also include it as part of a larger page - you can accomplish this with a single simple method call:
+
+```c++
+import(pagename);
+```
+
+The imported page will have access to the same request data that the calling page has access to.
+
+4.10 Loading static content from disk
+-------------------------------------
+
+Sometimes, you need to load static content from the hard drive - often, this is the case with images, user-uploaded content, etc. In htt++, doing this is extremely easy; simply call httpp::bind() or httpp::regex_bind(), just as you would with a Page, but for the second argument, simply pass httpp::Static.
+
+```c++
+//Load all jpg images directly from disk.
+httpp::regex_bind(".*\\.jpg", httpp::Static);
+```
+
+5. Known issues and troubleshooting
+===================================
+
+Most current known issues are simple missing features that need to be included; rest assured, as development continues, these features will be added.
+
+6. OMG MACROS?!?!?
+==================
+
+htt++ uses a lot of macros. I'm aware that many C++ developers have problems with the use of macros - and I am well aware of why! Macros have a lot of downsides and I, like most other C++ developers, try to avoid their use where possible. However, there are some things that simply can't be accomplished without them - that, after all, is the reason they exist in the first place.
+
+One of the largest faux pas with macros is the temptation to use them in places where a function would work as well - and I agree that this is a bad thing to do, rest assured. In the case of this library, however, the macros defined here are all necessities to accomplish the syntactical extension to C++ that I wanted to deliver. There are some drawbacks here - and I'm aware of them - but, in my opinion, the neat and clean code that it allows the developer to produce is well worth the tradeoff.
+
+That said, I completely understand if you disagree with me. Many people feel very strongly on the issue of macros. If you are one of those people, allow me to recommend two alternatives that can accomplish the same task of web development in C++:
+
+**TNTnet** - www.tntnet.org
+This library is fantastic and extremely speedy. Following the suit of PHP and other development libraries, TNTnet implements C++ for web development as a templating language, alternating between C++ and HTML syntax and allowing the embedding of C++ code directly into the HTML. Rather than extending the C++ syntax, as htt++ does, TNTnet uses a compiler called ecpp to convert your template files (with the extension .ecpp) into C++ code, and then compile that into an executable. Also, TNTnet has the ability to function as a single http server for multiple projects, which are defined in a configuration file, or to function as htt++ does with a separate embedded http server for each project. Additionally, tntnet's developer has also released two other powerful libraries - cxxtools and tntdb - which both synergize very well with TNTnet. You certainly can't go wrong here.
+
+**Wt** (aka "witty") - http://www.webtoolkit.eu/wt
+I haven't worked as much with Wt, but it's designed around traditional GUI programming to create functional web applications. I don't think Wt is quite as adept at creating nice looking websites as other choices are, but it's very handy for the C++ programmer who's less familiar with HTML but needs to put out a solid web application quickly using the tools ey already understands.
+
+7. Questions, answers, and contributions
+========================================
+
+If you have a question you'd like answered, or would like to contribute to the project, you can either message me using my GitHub profile (www.github.com/ShadauxCat) or you can create a fork of the project and then submit a pull request with your changes. I'm happy to answer questions, and also more than happy to accept code that helps forward the project.
