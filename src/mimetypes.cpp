@@ -18,7 +18,7 @@ namespace httpp
 
 	void PopulateMimeTypes()
 	{
-		MimeTypeMutex.lock();
+		boost::mutex::scoped_lock lock(MimeTypeMutex);
 		if(MimeTypesPopulated)
 		{
 			return;
@@ -1009,6 +1009,5 @@ namespace httpp
 		MimeTypes.push(new MimeMap("zirz", "application/vnd.zul"));
 		MimeTypes.push(new MimeMap("zmm", "application/vnd.handheld-entertainment+xml"));
 		MimeTypesPopulated = true;
-		MimeTypeMutex.unlock();
 	}
 }
