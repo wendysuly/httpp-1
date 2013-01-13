@@ -42,7 +42,7 @@ Page(Readme)
 </html>
 ```
 
-**htt++ alpha 0.1**
+**htt++ alpha 0.1**  
 Dynamic Web Development in C++
 
 Before using this code, please NOTE that this is an ALPHA release, primarily because many features in the HTTP standard are missing.
@@ -55,6 +55,7 @@ htt++ (pronounced "httplusplus") is a library designed to enable seamless, comfo
 To maximize performance and efficiency, htt++ also includes an embedded http server. Currently, this is the only method of using htt++ - there is no apache interface - but apache can still easily be used as a proxy if desired.
 
 **Contents:**
+
 1. TODO
 2. Dependencies
 3. Building and installing
@@ -292,6 +293,7 @@ Page(/*pagename*/)
 {
 	.../*code*/...
 }
+```
 
 A simple hello world index page, for example, might look like this:
 
@@ -527,7 +529,7 @@ When executed, the above page would output:
 </html>
 ```
 
-If you don't want to send any code to the section, you can use the macro SECT() (in capital letters) to call it. In the above case, you would simply call SECT(MsgContainer, "foo", "bar", "baz");
+If you don't want to send any code to the section, you can use the macro SECT() (in capital letters) to call it. In the above case, you would simply call SECT(NestedDiv, "foo", "bar", "baz");
 
 Of course, as you likely surmized, a Section is simply a class. If you want to define it as a traditional class, you can do so - the macros in this case are primarily a matter of coherence with the rest of the library, so that sections and pages follow a similar format.
 
@@ -610,6 +612,7 @@ void setHeader(std::string name, std::string content); //Sets the contents of a 
 Header *getHeader(std::string name); //Get the contents of a header with the given name.
 void setStatus(httpp::httpStatus r); //Sets the status of the page
 void setMessage(std::string str); //Sets the message sent back with the page; i.e., "PAGE NOT FOUND." This should be called after setStatus; setStatus has built-in default messages that it will set when it is called.
+```
 
 About the httpp::httpStatus enum:
 
