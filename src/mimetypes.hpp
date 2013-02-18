@@ -26,7 +26,7 @@ namespace httpp
 		std::string m_type;
 	};
 
-	extern JHash::string_map<MimeMap> MimeTypes;
+	extern JHash::map<MimeMap> MimeTypes;
 
 	void PopulateMimeTypes();
 }

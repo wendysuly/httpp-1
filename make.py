@@ -6,16 +6,15 @@ import os
 jmake.Libraries(
    "jnet",
    "jformat",
-   "jhash",
    "boost_thread",
    "boost_regex"
 )
 
 jmake.Output("libhttpp.so")
 
-jmake.Standard("gnu++11")
+jmake.Standard("c++11")
 
-jmake.Compiler("g++")
+jmake.Compiler("clang++")
 
 jmake.Shared()
 

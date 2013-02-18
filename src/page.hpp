@@ -87,7 +87,7 @@ namespace httpp
 			ret << m_request->getVersion() << " " << static_cast<int>(m_status) << " " << m_message << std::endl;
 			int size = m_headers.size();
 			for(int i=0; i<size; i++)
-				ret << m_headers[i]->getName() << ": " << m_headers[i]->getContent() << std::endl;
+				ret << m_headers[i].getName() << ": " << m_headers[i].getContent() << std::endl;
 			ret << std::endl;
 			return ret.str();
 		}
@@ -100,8 +100,8 @@ namespace httpp
 			int size=m_headers.size();
 			for(int i=0;i<size;i++)
 			{
-				if(m_headers[i]->getName() == name)
-					return m_headers[i];
+				if(m_headers[i].getName() == name)
+					return &m_headers[i];
 			}
 			return nullptr;
 		}
@@ -112,11 +112,11 @@ namespace httpp
 			if((h=getHeader(name)) != nullptr)
 				h->setContent(content);
 			else
-				m_headers.push_back(new Header(name, content));
+				m_headers.push_back(Header(name, content));
 		}
 		void addCookie(const std::string &name, const std::string &content)
 		{
-			m_headers.push_back(new Header("Set-Cookie", JFormat::format("{0}={1}", name, content)));
+			m_headers.push_back(Header("Set-Cookie", JFormat::format("{0}={1}", name, content)));
 		}
 
 		Request *getRequest(){ return m_request; }
@@ -359,10 +359,9 @@ namespace httpp
 				//We have headers we want to send every time. To save on memory allocation/deallocation costs,
 				//let's step through this backward until we find one we know we're setting, and then break out.
 				//This works because any added headers get added to the back of the list.
-				if(m_headers[i]->getName() == "Content-Type")
+				if(m_headers[i].getName() == "Content-Type")
 					break;
 				m_headers.pop_back();
-				delete m_headers[i];
 			}
 			setHeader("Server", "htt++ 0.1 alpha");
 			if(m_request->getVersion() == "HTTP/1.1" || strToLower((*m_request)["Connection"]) == "keep-alive")
@@ -382,7 +381,7 @@ namespace httpp
 		//(clearing unneeded headers in generateHeaders and printing headers in formatHeaders)
 		//involve stepping through the list, which is slower with a map.
 		//Search operations will not be considerably slower due to the small number of headers each page has.
-		std::vector<Header *> m_headers;
+		std::vector<Header> m_headers;
 		int m_tabpad;
 	};
 

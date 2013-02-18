@@ -2227,7 +2227,7 @@
 		#define ispan(...) HTTPP_I_TAG("", span, __VA_ARGS__)
 	#endif
 	#ifndef istrong
-		#define istrong(...) HTTPP_I_TAG("", ""ong, __VA_ARGS__)
+		#define istrong(...) HTTPP_I_TAG("", strong, __VA_ARGS__)
 	#endif
 	#ifndef istyle
 		#define istyle(...) HTTPP_I_TAG("", style, __VA_ARGS__)

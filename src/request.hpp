@@ -70,6 +70,11 @@ namespace httpp
 		{
 			m_stream.imbue(std::locale(std::locale(), new Converter()));
 		}
+		Variable(const Variable &v)
+		{
+			m_stream.imbue(std::locale(std::locale(), new Converter()));
+			m_content = v.m_content;
+		}
 		template<typename T=std::string>
 		T get()
 		{
@@ -87,26 +92,18 @@ namespace httpp
 	class VarMap
 	{
 	public:
-		VarMap(const std::string &name, const std::string &content) : m_name(name)
+		VarMap(const std::string &name, const std::string &content) : m_vars(std::vector<Variable>()), m_name(name)
 		{
-			m_vars = new std::vector<Variable *>();
-			m_vars->push_back(new Variable(content));
+			m_vars.push_back(Variable(content));
 		}
-		~VarMap()
-		{
-			for(Variable *v : *m_vars)
-			{
-				delete v;
-			}
-		}
-		std::vector<Variable *> *getVars(){ return m_vars; }
+		std::vector<Variable> &getVars(){ return m_vars; }
 		std::string getName(){ return m_name; }
 		void add(const std::string &name)
 		{
-			m_vars->push_back(new Variable(name));
+			m_vars.push_back(Variable(name));
 		}
 	private:
-		std::vector<Variable *>*m_vars;
+		std::vector<Variable> m_vars;
 		std::string m_name;
 	};
 
@@ -114,18 +111,23 @@ namespace httpp
 	{
 	public:
 		Request() : m_headers(&Header::getName, &Header::getContent), m_request_vars(&VarMap::getName, &VarMap::getVars) {}
-		~Request(){ std::vector<Header *> headers = m_headers.getAll(); for(int i=headers.size()-1;i>=0;i--){ delete headers[i]; } }
+		~Request(){ }
 		void create(const std::string &str);
-		std::string getHeader(const std::string &name){ return m_headers[name]; }
-		std::string operator[](const std::string &name){ return m_headers[name]; }
+		std::string getHeader(const std::string &name){ return m_headers[name].getContent(); }
+		std::string operator[](const std::string &name){ return m_headers[name].getContent(); }
 		template<typename T=std::string>
 		std::vector<T> getRequestVars(const std::string &name)
 		{
 			std::vector<T> outVect;
-			std::vector<Variable *>*vars = m_request_vars[name];
-			for(Variable *v : *vars)
+			if(m_request_vars.find(name) == m_request_vars.end())
 			{
-				outVect.push_back(v->get<T>());
+				outVect.push_back(T());
+				return outVect;
+			}
+			std::vector<Variable> &vars = m_request_vars[name].getVars();
+			for(Variable &v : vars)
+			{
+				outVect.push_back(v.get<T>());
 			}
 			if(outVect.size() == 0)
 			{
@@ -150,12 +152,12 @@ namespace httpp
 		void addRequestVars( const std::string &str );
 		void setCookies(const std::string &cookies);
 	private:
-		JHash::string_map<Header> m_headers;
+		JHash::map<Header> m_headers;
 		std::vector<Cookie> m_cookies;
 		std::string m_method;
 		std::string m_location;
 		std::string m_http_version;
-		JHash::basic_map<VarMap, std::vector<Variable *>> m_request_vars;
+		JHash::map<VarMap> m_request_vars;
 		JVect::jmap m_vars;
 	};
 }

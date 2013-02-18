@@ -96,8 +96,7 @@ namespace httpp
 			setCookies(content);
 		else
 		{
-			Header *h = new Header(name, content);
-			m_headers.push(h);
+			m_headers.push(Header(name, content));
 		}
 		//std::cout << "Found header: " << str << std::endl;
 	}
@@ -144,14 +143,14 @@ namespace httpp
 				in_name = !in_name;
 				if(in_name)
 				{
-					std::vector<Variable *> *v = m_request_vars[name];
-					if(v)
+					if(m_request_vars.find(name) != m_request_vars.end())
 					{
-						v->push_back(new Variable(content));
+						std::vector<Variable> &v = m_request_vars[name].getVars();
+						v.push_back(Variable(content));
 					}
 					else
 					{
-						m_request_vars.push(new VarMap(name, content));
+						m_request_vars.push(VarMap(name, content));
 					}
 					name = "";
 					content = "";
@@ -180,14 +179,14 @@ namespace httpp
 				content += str[i];
 		}
 
-		std::vector<Variable *> *v = m_request_vars[name];
-		if(v)
+		if(m_request_vars.find(name) != m_request_vars.end())
 		{
-			v->push_back(new Variable(content));
+			std::vector<Variable> &v = m_request_vars[name].getVars();
+			v.push_back(Variable(content));
 		}
 		else
 		{
-			m_request_vars.push(new VarMap(name, content));
+			m_request_vars.push(VarMap(name, content));
 		}
 	}
 

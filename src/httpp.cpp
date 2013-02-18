@@ -27,14 +27,12 @@ namespace httpp
 
 	void httpp_server::bind(const std::string &key, BasePage &page, const std::string &ContentType)
 	{
-		PageMap *m = new PageMap("/"+key, page, ContentType);
-		BindMap.push(m);
+		BindMap.push(PageMap("/"+key, page, ContentType));
 	}
 
 	void httpp_server::regex_bind(const std::string &key, BasePage &page, const std::string &ContentType)
 	{
-		PageMap *m = new PageMap("/"+key, page, ContentType);
-		RegexMap.push_back(m);
+		RegexMap.push_back(PageMap("/"+key, page, ContentType));
 	}
 
 	const std::string httpp_server::ServerIdentStr = "htt++ Version 0.1 alpha. http://www.example.com/httpp/";
@@ -98,7 +96,11 @@ namespace httpp
 					break;
 				ext = str[i] + ext;
 			}
-			if((type = MimeTypes[ext]) == "")
+			if(MimeTypes.find(ext) != MimeTypes.end())
+			{
+				type = MimeTypes[ext].getMimeType();
+			}
+			else
 			{
 				type = "text/plain";
 			}
@@ -121,20 +123,23 @@ namespace httpp
 		unsigned int size = RegexMap.size();
 		for(unsigned int i=0;i<size;i++)
 		{
-			boost::regex pattern(RegexMap[i]->getName());
+			boost::regex pattern(RegexMap[i].getName());
 			if(boost::regex_match(location, pattern))
-				return RegexMap[i];
+				return &RegexMap[i];
 		}
 		return nullptr;
 	}
 
 	PageMap *httpp_server::GetPageMap(const std::string &location)
 	{
-		PageMap *page;
-		page = BindMap[location];
-		if(page == nullptr)
-			page = Regex_GetPage(location);
-		return page;
+		try
+		{
+			return &BindMap[location];
+		}
+		catch(JHash::no_such_element &e)
+		{
+			return Regex_GetPage(location);
+		}
 	}
 
 	BasePage &httpp_server::GetPageRef(const std::string &location)
@@ -144,8 +149,7 @@ namespace httpp
 			return pagemap->getPage();
 		else
 		{
-			//std::cout << "No mapping exists for " << location << std::endl;
-			pagemap = BindMap["/404"];
+			pagemap = &BindMap["/404"];
 			BasePage &page = pagemap->getPage();
 			page.setStatus(httpStatus::rNOT_FOUND);
 			return page;
@@ -226,9 +230,9 @@ namespace httpp
 	{
 		int i=0;
 		prctl(PR_SET_NAME,"htt++-listener",0,0,0);
-		if(BindMap["/400"] == nullptr)
+		if(BindMap.find("/400") == BindMap.end())
 			bind("400", Basic400);
-		if(BindMap["/404"] == nullptr)
+		if(BindMap.find("/404") == BindMap.end())
 			bind("404", Basic404);
 		PopulateMimeTypes();
 		JNet::Connection *c;
@@ -250,7 +254,7 @@ namespace httpp
 				return;
 			}
 		}*/
-		boost::thread b[numCPU];
+		std::vector<boost::thread> b(numCPU);
 		for( ;pnum < numCPU; pnum++)
 		{
 			b[pnum] = boost::thread(&worker);
@@ -291,7 +295,7 @@ namespace httpp
 					{
 						std::stringstream s;
 						s << "/" << e.getCode();
-						pagemap = BindMap[s.str()];
+						pagemap = &BindMap[s.str()];
 						code = e.getCode();
 						msg = e.getMsg();
 					}
@@ -299,7 +303,7 @@ namespace httpp
 					{
 						if((pagemap = GetPageMap(request->getLocation())) == nullptr)
 						{
-							pagemap = BindMap["/404"];
+							pagemap = &BindMap["/404"];
 							code = 404;
 						}
 					}

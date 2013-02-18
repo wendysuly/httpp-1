@@ -47,7 +47,7 @@ namespace httpp
 		//Unfortunately, we can't do that with regular expressions.
 		//We have to put regular expressions into a vector and step through it.
 		//But at least we can minimize the size of the vector by keeping statically-named pages in the map.
-		std::vector<PageMap*> RegexMap;
+		std::vector<PageMap> RegexMap;
 
 		PageMap *Regex_GetPage(const std::string &location);
 		PageMap *GetPageMap(const std::string &location);
