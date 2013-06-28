@@ -4,7 +4,6 @@ import jmake
 import os
 
 jmake.Libraries(
-   "jnet",
    "jformat",
    "boost_thread",
    "boost_regex"
