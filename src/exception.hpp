@@ -1,14 +1,11 @@
+#pragma once
 /*************************
  *         htt++         *
  *************************
  *   Exceptions Module   *
  *     Header File       *
- *************************
- * www.git-hub.com/httpp *
  *************************/
-#ifndef EXCEPTION_HPP_
-#define EXCEPTION_HPP_
-
+ 
 #include <sstream>
 #include <string>
 
@@ -37,5 +34,3 @@ namespace httpp
 		int m_code;
 	};
 }
-
-#endif /* EXCEPTION_HPP_ */

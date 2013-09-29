@@ -1,18 +1,14 @@
+#pragma once
 /*************************
  *         htt++         *
  *************************
  *     Request Module    *
  *      Header File      *
- *************************
- * www.git-hub.com/httpp *
  *************************/
-#include "jhash/JHash.hpp"
-#include "jnet/JNet.hpp"
-#include <jvect/JVect.hpp>
+#include <sprawl/multiaccess/multiaccess.hpp>
+#include <sprawl/network/network.hpp>
+#include <sprawl/multitype/multitype.hpp>
 #include "exception.hpp"
-
-#ifndef REQUEST_HPP_
-#define REQUEST_HPP_
 
 //Bit hacky but it lets us default to std::string.
 //Macros here are primarily to help readability:
@@ -144,7 +140,7 @@ namespace httpp
 		template<typename T>
 		T getVar(const std::string &name){ return m_vars.get<T>(name); }
 		template<typename T>
-		void addVar(T var, const std::string &name){ m_vars.m_jvect_push(var, name); }
+		void addVar(T var, const std::string &name){ m_vars.m_multitype_push(var, name); }
 	protected:
 		friend class httpp_server;
 		//friend void listen(int port);
@@ -152,14 +148,12 @@ namespace httpp
 		void addRequestVars( const std::string &str );
 		void setCookies(const std::string &cookies);
 	private:
-		JHash::map<Header> m_headers;
+		sprawl::multiaccess::multiaccess_map<Header> m_headers;
 		std::vector<Cookie> m_cookies;
 		std::string m_method;
 		std::string m_location;
 		std::string m_http_version;
-		JHash::map<VarMap> m_request_vars;
-		JVect::jmap m_vars;
+		sprawl::multiaccess::multiaccess_map<VarMap> m_request_vars;
+		sprawl::multitype::multitype_map m_vars;
 	};
 }
-
-#endif /* REQUEST_HPP_ */

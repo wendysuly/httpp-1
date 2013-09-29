@@ -7,7 +7,7 @@
  * www.git-hub.com/httpp *
  *************************/
 
-#include "jnet/JNet.hpp"
+#include <sprawl/network/network.hpp>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -37,8 +37,8 @@ namespace httpp
 
 	const std::string httpp_server::ServerIdentStr = "htt++ Version 0.1 alpha. http://www.example.com/httpp/";
 
-	std::queue<std::tuple<PageMap*, JNet::Connection*, Request*, int, std::string>> RequestQueue;
-	std::queue<JNet::Connection*> CloseQueue;
+	std::queue<std::tuple<PageMap*, std::weak_ptr<sprawl::network::Connection>, Request*, int, std::string>> RequestQueue;
+	std::queue<std::weak_ptr<sprawl::network::Connection>> CloseQueue;
 	boost::mutex CloseMutex;
 	boost::mutex RequestMutex;
 
@@ -67,11 +67,11 @@ namespace httpp
 		{
 			HEAD
 			{
-				$title(JFormat::format("Error 400: {0}", getMessage()));
+				$title(sprawl::format::format("Error 400: {0}", getMessage()));
 			}
 			BODY
 			{
-				$strong(JFormat::format("Error 400: {0}", getMessage()));
+				$strong(sprawl::format::format("Error 400: {0}", getMessage()));
 				xBR;
 				xBR;
 				$i(httpp_server::ServerIdentStr);
@@ -136,7 +136,7 @@ namespace httpp
 		{
 			return &BindMap[location];
 		}
-		catch(JHash::no_such_element &e)
+		catch(sprawl::multiaccess::no_such_element &e)
 		{
 			return Regex_GetPage(location);
 		}
@@ -172,10 +172,10 @@ namespace httpp
 		Request *request;
 		std::string header;
 		std::string response;
-		JNet::Connection *c;
+		std::shared_ptr<sprawl::network::Connection> c;
 		int code;
 		std::string msg;
-		std::tuple<PageMap*, JNet::Connection*, Request*, int, std::string> rq;
+		std::tuple<PageMap*, std::weak_ptr<sprawl::network::Connection>, Request*, int, std::string> rq;
 		while(true)
 		{
 			RequestMutex.lock();
@@ -189,7 +189,12 @@ namespace httpp
 				RequestQueue.pop();
 				RequestMutex.unlock();
 				pagemap = std::get<0>(rq);
-				c = std::get<1>(rq);
+				c = std::get<1>(rq).lock();
+				if(!c)
+				{
+					//Nothing we can do, connection lost.
+					continue;
+				}
 				request = std::get<2>(rq);
 				code = std::get<3>(rq);
 				msg = std::get<4>(rq);
@@ -235,7 +240,7 @@ namespace httpp
 		if(BindMap.find("/404") == BindMap.end())
 			bind("404", Basic404);
 		PopulateMimeTypes();
-		JNet::Connection *c;
+		std::shared_ptr<sprawl::network::Connection> c;
 		Sock.setTimeout(1);
 		Sock.listen(port);
 		int pnum = 0;
@@ -268,7 +273,12 @@ namespace httpp
 			Sock.HandleIO();
 			for(int i=0;i<Sock.GetNumConnections();i++)
 			{
-				c = Sock.GetConnection(i);
+				c = Sock.GetConnection(i).lock();
+				if(!c)
+				{
+					//Nothing to do, connection lost.
+					continue;
+				}
 				code = 200;
 				msg = "";
 				if(c->DataReady())
@@ -316,7 +326,7 @@ namespace httpp
 			while(!CloseQueue.empty())
 			{
 				//std::cout << "Closed : " << ++i << std::endl;
-				Sock.CloseConnection(CloseQueue.front());
+				Sock.CloseConnection(CloseQueue.front().lock());
 				CloseQueue.pop();
 			}
 			CloseMutex.unlock();

@@ -1,19 +1,16 @@
+#pragma once
+
 /*************************
  *         htt++         *
  *************************
  *     Page Module       *
  *     Header File       *
- *************************
- * www.git-hub.com/httpp *
  *************************/
-
-#ifndef PAGE_HPP_
-#define PAGE_HPP_
 
 #include <functional>
 #include "TagStructs.hpp"
-#include "jformat/JFormat.hpp"
-#include "jnet/JNet.hpp"
+#include <sprawl/format/format.hpp>
+#include <sprawl/network/network.hpp>
 #include "request.hpp"
 #include "util.hpp"
 
@@ -116,7 +113,7 @@ namespace httpp
 		}
 		void addCookie(const std::string &name, const std::string &content)
 		{
-			m_headers.push_back(Header("Set-Cookie", JFormat::format("{0}={1}", name, content)));
+			m_headers.push_back(Header("Set-Cookie", sprawl::format::format("{0}={1}", name, content)));
 		}
 
 		Request *getRequest(){ return m_request; }
@@ -330,19 +327,19 @@ namespace httpp
 		template<typename... Params>
 		void $f(Params... params)
 		{
-			$(JFormat::format(params...));
+			$(sprawl::format::format(params...));
 		}
 
 		template<typename... Params>
 		void $Nf(Params... params)
 		{
-			$N(JFormat::format(params...));
+			$N(sprawl::format::format(params...));
 		}
 
 		template<typename... Params>
 		void $NNf(Params... params)
 		{
-			$NN(JFormat::format(params...));
+			$NN(sprawl::format::format(params...));
 		}
 		std::function<void(void)> m_lambdaFunc;
 		bool m_sectionTracker;
@@ -398,5 +395,3 @@ namespace httpp
 		BasePage &m_page;
 	};
 }
-
-#endif /* PAGE_HPP_ */

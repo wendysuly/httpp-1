@@ -1,14 +1,11 @@
+#pragma once
+
 /*************************
  *         htt++         *
  *************************
  *       Tag Module      *
  *      Header File      *
- *************************
- * www.git-hub.com/httpp *
  *************************/
-
-#ifndef TAGS_HPP_
-#define TAGS_HPP_
 
 #include <iostream>
 
@@ -140,5 +137,3 @@
  * 		<tag attrs.... />
  */
 #define HTTP_X_TAG(tagname, ...) [&](){HTTPP_BUILD_TAG(tagname, __VA_ARGS__); make_x_tag(#tagname);}()
-
-#endif

@@ -1,14 +1,10 @@
+#pragma once
 /*************************
  *         htt++         *
  *************************
  * Tag Structures Module *
  *      Header File      *
- *************************
- * www.git-hub.com/httpp *
  *************************/
-
-#ifndef TAGSTRUCTS_HPP_
-#define TAGSTRUCTS_HPP_
 
 #include <string>
 #include <sstream>
@@ -221,4 +217,3 @@ namespace httpp
 
 #undef DECLARE_TAG
 #undef DECLARE_TAG2
-#endif /* TAGSTRUCTS_HPP_ */
