@@ -36,13 +36,13 @@ namespace httpp
 	{
 		std::string tagname = m_tagStack[m_tagStack.size()-1];
 		m_tagStack.pop_back();
-		m_outstream << pad_tabs() << JFormat::format("</{0}>", tagname) << std::endl;
+		m_outstream << pad_tabs() << sprawl::format::format("</{0}>", tagname) << std::endl;
 		return false;
 	}
 
 	void BasePage::tag(const std::string &tagname)
 	{
-		m_outstream << pad_tabs() << JFormat::format("<{0}{1}>", tagname, m_currentTag->get_args()) << std::endl;
+		m_outstream << pad_tabs() << sprawl::format::format("<{0}{1}>", tagname, m_currentTag->get_args()) << std::endl;
 		delete m_currentTag;
 		m_tagStack.push_back(tagname);
 	}
@@ -51,12 +51,12 @@ namespace httpp
 	{
 		std::string args = m_currentTag->get_args();
 		delete m_currentTag;
-		return JFormat::format("<{0}{1}>{2}</{0}>", tagname, args, str);
+		return sprawl::format::format("<{0}{1}>{2}</{0}>", tagname, args, str);
 	}
 
 	void BasePage::make_x_tag(const std::string &tagname)
 	{
-		m_outstream << pad_tabs() << JFormat::format("<{0}{1} />", tagname, m_currentTag->get_args()) << std::endl;
+		m_outstream << pad_tabs() << sprawl::format::format("<{0}{1} />", tagname, m_currentTag->get_args()) << std::endl;
 		delete m_currentTag;
 	}
 

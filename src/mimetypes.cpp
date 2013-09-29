@@ -11,7 +11,7 @@
 
 namespace httpp
 {
-	JHash::map<MimeMap> MimeTypes(&MimeMap::getExtension, &MimeMap::getMimeType);
+	sprawl::multiaccess::multiaccess_map<MimeMap> MimeTypes(&MimeMap::getExtension, &MimeMap::getMimeType);
 
 	boost::mutex MimeTypeMutex;
 	bool MimeTypesPopulated;

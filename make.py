@@ -4,7 +4,7 @@ import jmake
 import os
 
 jmake.Libraries(
-   "jformat",
+   "sprawl_format",
    "boost_thread",
    "boost_regex"
 )

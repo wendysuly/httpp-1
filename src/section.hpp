@@ -1,14 +1,11 @@
+#pragma once
+
 /*************************
  *         htt++         *
  *************************
  *     Section Module    *
  *      Header File      *
- *************************
- * www.git-hub.com/httpp *
  *************************/
-
-#ifndef SECTION_HPP_
-#define SECTION_HPP_
 
 /*
  * The methods used here are similar to those used by the tags (see tags.hpp), only a small amount more complicated.
@@ -91,5 +88,3 @@ namespace httpp
 		Request *request;
 	};
 }
-
-#endif /* SECTION_HPP_ */

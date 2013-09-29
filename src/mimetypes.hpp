@@ -1,16 +1,13 @@
+#pragma once
+
 /*************************
  *         htt++         *
  *************************
  *      MIME Module      *
  *      Source File      *
- *************************
- * www.git-hub.com/httpp *
  *************************/
 
-#ifndef MIMETYPES_HPP_
-#define MIMETYPES_HPP_
-
-#include "jhash/JHash.hpp"
+#include <sprawl/multiaccess/multiaccess.hpp>
 #include <boost/thread/mutex.hpp>
 
 namespace httpp
@@ -26,9 +23,7 @@ namespace httpp
 		std::string m_type;
 	};
 
-	extern JHash::map<MimeMap> MimeTypes;
+	extern sprawl::multiaccess::multiaccess_map<MimeMap> MimeTypes;
 
 	void PopulateMimeTypes();
 }
-
-#endif /* MIMETYPES_HPP_ */

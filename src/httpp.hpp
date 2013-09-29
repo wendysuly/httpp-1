@@ -1,17 +1,15 @@
+#pragma once
+
 /*************************
  *         htt++         *
  *************************
  *      Main Module      *
  *      Header File      *
- *************************
- * www.git-hub.com/httpp *
  *************************/
 
-#ifndef HTTPP_HPP_
-#define HTTPP_HPP_
-
-#include "jformat/JFormat.hpp"
-#include "jhash/JHash.hpp"
+#include <sprawl/format/format.hpp>
+#include <sprawl/multiaccess/multiaccess.hpp>
+#include <sprawl/network/network.hpp>
 #include "page.hpp"
 #include "section.hpp"
 #include "TagStructs.hpp"
@@ -41,9 +39,9 @@ namespace httpp
 
 		void listen(int port);
 	private:
-		JNet::ServerSocket Sock;
+		sprawl::network::ServerSocket Sock;
 		//When possible, we'll use a map to find our pages.
-		JHash::map<PageMap> BindMap;
+		sprawl::multiaccess::multiaccess_map<PageMap> BindMap;
 		//Unfortunately, we can't do that with regular expressions.
 		//We have to put regular expressions into a vector and step through it.
 		//But at least we can minimize the size of the vector by keeping statically-named pages in the map.
@@ -56,5 +54,3 @@ namespace httpp
 		friend class Pages::page_Basic400;
 	};
 }
-
-#endif /* HTTPP_HPP_ */
